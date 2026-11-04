@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="400" viewBox="0 0 1100 400" role="img" aria-label="De la donnée événementielle à la réponse contextualisée">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f8effa"/><stop offset=".58" stop-color="#f9f7f3"/><stop offset="1" stop-color="#e8f2ef"/></linearGradient><filter id="sh"><feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#6a5364" flood-opacity=".10"/></filter></defs>
+<rect width="1100" height="400" rx="24" fill="url(#bg)"/>
+<path d="M 0 320 C 180 280 320 360 490 320 S 835 280 1100 320" fill="none" stroke="#cfbada" stroke-opacity=".4" stroke-width="1.5"/>
+<text x="62" y="73" fill="#503a60" font-size="20" font-family="Segoe UI,Arial,sans-serif" font-weight="750" letter-spacing="2">RAG-PIPELINE</text>
+<text x="62" y="106" fill="#6d6274" font-size="15" font-family="Segoe UI,Arial,sans-serif">De la donnée événementielle à la réponse contextualisée</text>
+
+<rect x="62" y="154" width="172" height="126" rx="17" fill="#ffffff" stroke="#e7dce8" filter="url(#sh)"/>
+<circle cx="85" cy="178" r="8" fill="#8569a6" opacity=".70"/>
+<text x="80" y="214" fill="#392e46" font-size="16" font-family="Segoe UI,Arial,sans-serif" font-weight="720">OpenAgenda</text>
+<text x="80" y="239" fill="#706476" font-size="13" font-family="Segoe UI,Arial,sans-serif">API &amp; snapshot</text>
+<path d="M 239 218 h 18 m -5 -5 l 5 5 l -5 5" fill="none" stroke="#8569a6" stroke-width="2" stroke-linejoin="round"/>
+<rect x="263" y="154" width="172" height="126" rx="17" fill="#ffffff" stroke="#e7dce8" filter="url(#sh)"/>
+<circle cx="286" cy="178" r="8" fill="#8569a6" opacity=".70"/>
+<text x="281" y="214" fill="#392e46" font-size="16" font-family="Segoe UI,Arial,sans-serif" font-weight="720">Préparer</text>
+<text x="281" y="239" fill="#706476" font-size="13" font-family="Segoe UI,Arial,sans-serif">Filtrer, dédupliquer</text>
+<path d="M 440 218 h 18 m -5 -5 l 5 5 l -5 5" fill="none" stroke="#8569a6" stroke-width="2" stroke-linejoin="round"/>
+<rect x="464" y="154" width="172" height="126" rx="17" fill="#ffffff" stroke="#e7dce8" filter="url(#sh)"/>
+<circle cx="487" cy="178" r="8" fill="#8569a6" opacity=".70"/>
+<text x="482" y="214" fill="#392e46" font-size="16" font-family="Segoe UI,Arial,sans-serif" font-weight="720">Mistral</text>
+<text x="482" y="239" fill="#706476" font-size="13" font-family="Segoe UI,Arial,sans-serif">Embeddings</text>
+<path d="M 641 218 h 18 m -5 -5 l 5 5 l -5 5" fill="none" stroke="#8569a6" stroke-width="2" stroke-linejoin="round"/>
+<rect x="665" y="154" width="172" height="126" rx="17" fill="#ffffff" stroke="#e7dce8" filter="url(#sh)"/>
+<circle cx="688" cy="178" r="8" fill="#8569a6" opacity=".70"/>
+<text x="683" y="214" fill="#392e46" font-size="16" font-family="Segoe UI,Arial,sans-serif" font-weight="720">FAISS</text>
+<text x="683" y="239" fill="#706476" font-size="13" font-family="Segoe UI,Arial,sans-serif">Recherche</text>
+<path d="M 842 218 h 18 m -5 -5 l 5 5 l -5 5" fill="none" stroke="#8569a6" stroke-width="2" stroke-linejoin="round"/>
+<rect x="866" y="154" width="172" height="126" rx="17" fill="#ffffff" stroke="#e7dce8" filter="url(#sh)"/>
+<circle cx="889" cy="178" r="8" fill="#8569a6" opacity=".70"/>
+<text x="884" y="214" fill="#392e46" font-size="16" font-family="Segoe UI,Arial,sans-serif" font-weight="720">RAG</text>
+<text x="884" y="239" fill="#706476" font-size="13" font-family="Segoe UI,Arial,sans-serif">Réponse sourcée</text>
+<text x="62" y="356" fill="#8b758a" font-size="13" font-family="Segoe UI,Arial,sans-serif" letter-spacing="1">ARCHITECTURE SIMPLIFIÉE / REPRÉSENTATION CONCEPTUELLE</text>
+</svg>

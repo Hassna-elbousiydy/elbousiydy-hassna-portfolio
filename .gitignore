@@ -1,1 +1,6 @@
 Portfolio_Hassna_Apercu_v1.html
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+Portfolio_Hassna_V2*.zip
