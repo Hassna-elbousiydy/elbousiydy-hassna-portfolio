@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#F8F7F2" name="theme-color"/>
+<meta content="Hassna El-Bousiydy, Data Engineer. Projets documentés en pipelines de données, MongoDB, orchestration et RAG." name="description"/>
+<meta content="website" property="og:type"/>
+<meta content="Hassna El-Bousiydy | Data Engineer &amp; Applied AI" property="og:title"/>
+<meta content="Projets Data Engineering et IA appliquée, architectures, résultats et décisions techniques." property="og:description"/>
+<meta content="assets/img/portrait-hassna.webp" property="og:image"/>
+<title>Hassna El-Bousiydy | Data Engineer &amp; Applied AI</title>
+<link href="assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="assets/css/styles.css" rel="stylesheet"/>
+<script defer="" src="assets/js/main.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#contenu">Aller au contenu</a>
+<header class="site-header">
+<div class="container header-row">
+<a aria-label="Hassna El-Bousiydy, accueil" class="logo" href="index.html"><span aria-hidden="true" class="logo-mark">H</span> Hassna El-Bousiydy</a>
+<nav aria-label="Navigation principale" class="header-nav">
+<a href="#projets">Projets</a><a href="#expertises">Expertises</a><a href="#apropos">À propos</a><a class="nav-pill" href="#contact">Contact</a>
+</nav>
+</div>
+</header>
+<main id="contenu">
+<section aria-labelledby="titre-accueil" class="hero">
+<div class="container hero-grid">
+<div>
+<span class="eyebrow">Projets de données et IA</span>
+<h1 id="titre-accueil">Hassna <span class="highlight">El-Bousiydy.</span></h1>
+<p class="hero-role">Data Engineer  ·  Applied AI</p><p class="lead">Je développe des pipelines de données, des traitements reproductibles et des outils de recherche sémantique. Je m'intéresse autant au fonctionnement qu'aux preuves de qualité.</p>
+
+<p class="hero-note">Ce portfolio réunit mes réalisations de formation. Pour chaque projet, je montre la méthode, les choix techniques et ce que les tests permettent réellement de conclure.</p>
+<div class="actions">
+<a class="button button-primary" href="#projets">Découvrir les projets <span aria-hidden="true" class="arrow">↗</span></a>
+<a class="button button-secondary" href="https://github.com/Hassna-elbousiydy" rel="noopener noreferrer" target="_blank">Mon GitHub <span aria-hidden="true" class="arrow">↗</span></a>
+</div>
+<div aria-label="Domaines d'intervention" class="hero-meta">
+<span><i aria-hidden="true" class="dot"></i> Data pipelines &amp; qualité</span>
+<span><i aria-hidden="true" class="dot"></i> Python &amp; SQL</span>
+<span><i aria-hidden="true" class="dot"></i> NLP &amp; RAG</span>
+</div>
+</div>
+<figure class="hero-photo-wrap">
+<div aria-hidden="true" class="hero-photo-bg"></div>
+<img alt="Portrait professionnel de Hassna El-Bousiydy" class="hero-photo" fetchpriority="high" height="1125" src="assets/img/portrait-hassna.webp" width="900"/>
+<figcaption class="photo-stamp"><strong>Hassna El-Bousiydy</strong>Data Engineering &amp; IA appliquée</figcaption>
+</figure>
+</div>
+</section>
+<section aria-labelledby="projets-titre" class="section projects-section" id="projets">
+<div class="container">
+<div class="section-head">
+<span class="section-kicker">01 / Réalisations</span>
+<h2 class="serif" id="projets-titre">Les projets, en détail.</h2>
+<p>Quatre réalisations de mon parcours Data Engineer. Chaque étude de cas présente le problème, les décisions et les éléments vérifiables.</p>
+</div>
+<div aria-label="Filtrer les projets" class="filter-bar" role="group">
+<button aria-pressed="true" class="filter-button" data-filter="all" type="button">Tous les projets</button>
+<button aria-pressed="false" class="filter-button" data-filter="ia" type="button">IA &amp; RAG</button>
+<button aria-pressed="false" class="filter-button" data-filter="pipeline" type="button">Pipelines</button>
+<button aria-pressed="false" class="filter-button" data-filter="database" type="button">Bases de données</button>
+</div>
+<p aria-live="polite" class="muted" id="filter-feedback" style="font-size:.83rem;margin:-10px 0 22px">4 projets affichés.</p>
+<div class="project-grid">
+<article class="project-card" data-category="ia">
+<div class="project-cover rag"><img alt="Schéma de traitement OpenAgenda vers Mistral et FAISS" height="400" loading="lazy" src="assets/img/rag-pipeline.svg" width="1100"/><span class="cover-accent">Étude de cas détaillée</span></div>
+<div class="project-body">
+<span class="project-type">NLP / Recherche sémantique</span>
+<h3>Puls-Events RAG</h3>
+<p>Concevoir un assistant de découverte d'événements culturels combinant données OpenAgenda, recherche vectorielle et réponses contextualisées.</p>
+<div class="project-measures"><div><strong>12 763</strong><small>événements uniques</small></div><div><strong>0,9545</strong><small>MRR</small></div><div><strong>74</strong><small>tests réussis</small></div></div>
+<div class="project-tags"><span>Python</span><span>FAISS</span><span>Mistral</span><span>LangChain</span><span>Docker</span></div>
+<a class="card-link" href="projets/puls-events-rag.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card" data-category="pipeline">
+<div class="project-cover mint"><img alt="Pipeline météo avec ingestion, PostgreSQL, dbt et composants cloud" height="400" loading="lazy" src="assets/img/weather-pipeline.svg" width="1100"/><span class="cover-accent">Data pipeline</span></div>
+<div class="project-body">
+<span class="project-type">ELT / Modélisation / Qualité</span>
+<h3>Pipeline de données météo</h3>
+<p>Structurer un flux de données depuis l'ingestion jusqu'aux modèles analytiques, avec des contrôles qualité et une étude de son exécution cloud.</p>
+<div class="project-tags"><span>PostgreSQL</span><span>Airbyte</span><span>dbt</span><span>AWS</span></div>
+<a class="card-link" href="projets/pipeline-meteo.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card" data-category="database">
+<div class="project-cover wood"><img alt="Étapes de migration de données CSV vers MongoDB" height="400" loading="lazy" src="assets/img/mongo-pipeline.svg" width="1100"/><span class="cover-accent">Base NoSQL</span></div>
+<div class="project-body">
+<span class="project-type">NoSQL / Migration contrôlée</span>
+<h3>Migration vers MongoDB</h3>
+<p>Transformer des données de santé structurées en documents, fiabiliser la migration et réfléchir à la validation, à l'indexation et aux accès.</p>
+<div class="project-tags"><span>Python</span><span>MongoDB</span><span>Docker</span><span>Validation</span></div>
+<a class="card-link" href="projets/migration-mongodb.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card" data-category="pipeline">
+<div class="project-cover mist"><img alt="Étapes d'orchestration de sources multiples avec Kestra" height="400" loading="lazy" src="assets/img/kestra-pipeline.svg" width="1100"/><span class="cover-accent">Automatisation</span></div>
+<div class="project-body">
+<span class="project-type">Orchestration / Workflows</span>
+<h3>Pipeline orchestré avec Kestra</h3>
+<p>Coordonner des étapes de préparation et de rapprochement de données provenant de plusieurs sources, avec une sortie exploitable côté métier.</p>
+<div class="project-tags"><span>Kestra</span><span>SQL</span><span>Python</span><span>Contrôles</span></div>
+<a class="card-link" href="projets/orchestration-kestra.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+</div>
+</div>
+</section>
+<section aria-labelledby="experts-title" class="section section-aside" id="expertises">
+<div class="container">
+<div class="section-head"><span class="section-kicker">02 / Expertise</span><h2 class="serif" id="experts-title">Ce que je mets en pratique.</h2><p>Ingestion, modélisation, orchestration, recherche sémantique : j'utilise ces outils avec des tests, des critères métier et une documentation précise.</p></div>
+<div class="expertise-grid">
+<article class="expertise-card"><span class="expertise-num">01</span><h3>Construire des flux fiables</h3><p>Ingestion, transformations, modélisation SQL et NoSQL, orchestration et reproductibilité. Les outils servent une architecture claire.</p></article>
+<article class="expertise-card"><span class="expertise-num">02</span><h3>Vérifier les données</h3><p>Contrôles métier, tests automatisés, déduplication, métriques, traçabilité des traitements et analyse des limites.</p></article>
+<article class="expertise-card"><span class="expertise-num">03</span><h3>Évaluer l'IA appliquée</h3><p>Embeddings, recherche sémantique, RAG et évaluation séparée du retrieval et de la génération pour des réponses mieux fondées.</p></article>
+</div>
+</div>
+</section>
+<section aria-labelledby="about-title" class="section" id="apropos">
+<div class="container about-grid">
+<figure class="about-photo"><img alt="Hassna travaillant à son bureau devant son ordinateur et ses notes" height="900" loading="lazy" src="assets/img/hassna-au-travail.webp" width="1200"/><figcaption>Un moment de travail, entre documentation et expérimentation.</figcaption></figure>
+<div class="about-copy">
+<span class="section-kicker">03 / À propos</span>
+<h2 class="serif" id="about-title">Une curiosité technique, très concrète.</h2>
+<p>J'aime analyser un problème jusqu'à en comprendre les contraintes. Ensuite, je construis, je teste et je reviens sur les résultats lorsque quelque chose ne tient pas.</p>
+<p>Ce portfolio présente actuellement les réalisations de mon parcours Data Engineer chez OpenClassrooms (2025-2026). Son architecture est pensée pour accueillir plus tard mes autres expériences et projets, sans les mélanger à ce périmètre de formation.</p>
+<div aria-label="Compétences" class="about-list"><span>Python &amp; SQL</span><span>PostgreSQL &amp; MongoDB</span><span>Airbyte &amp; dbt</span><span>Kestra &amp; Docker</span><span>FAISS &amp; Mistral</span><span>Tests &amp; qualité</span></div>
+<div class="progress-strip"><span>Explorer les sources</span><span>Concevoir</span><span>Tester</span><span>Documenter</span></div>
+</div>
+</div>
+</section>
+<section aria-labelledby="contact-title" class="contact-section" id="contact">
+<div class="container contact-grid">
+<div><span class="section-kicker">04 / Contact</span><h2 class="serif" id="contact-title">Un projet à discuter ?</h2><p>Pour échanger sur un besoin en données, un projet IA ou une collaboration, vous pouvez me contacter ici.</p></div>
+<div class="contact-links">
+<a class="contact-link" href="mailto:h.elbousiydy@gmail.com?subject=Contact%20via%20portfolio"><span>Email<small>h.elbousiydy@gmail.com</small></span><span aria-hidden="true">↗</span></a>
+<a class="contact-link" href="https://www.linkedin.com/in/hassna-elbousiydy-228a91142/" rel="noopener noreferrer" target="_blank"><span>LinkedIn<small>Parcours et échanges professionnels</small></span><span aria-hidden="true">↗</span></a>
+<a class="contact-link" href="https://github.com/Hassna-elbousiydy" rel="noopener noreferrer" target="_blank"><span>GitHub<small>Code, documentation et projets</small></span><span aria-hidden="true">↗</span></a>
+<a class="contact-link" href="mailto:h.elbousiydy@gmail.com?subject=Demande%20de%20CV"><span>Demander mon CV<small>CV PDF transmis directement sur demande</small></span><span aria-hidden="true">↗</span></a>
+</div>
+</div>
+</section>
+</main>
+<footer class="site-footer"><div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering &amp; Applied AI</span><div class="footer-links"><a href="#projets">Projets</a><a href="mailto:h.elbousiydy@gmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" rel="noopener noreferrer" target="_blank">GitHub</a></div></div></footer>
+</body>
+</html>
