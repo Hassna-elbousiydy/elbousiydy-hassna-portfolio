@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="#F8F7F2" name="theme-color"/>
-<meta content="Hassna El-Bousiydy, Data Engineer. Projets documentés en pipelines de données, MongoDB, orchestration et RAG." name="description"/>
+<meta content="Hassna El-Bousiydy, Data Engineer et IA appliquée. Projets Python, SQL, dbt, AWS, PySpark, orchestration et RAG : architectures, tests et résultats documentés." name="description"/>
 <meta content="website" property="og:type"/>
 <meta content="Hassna El-Bousiydy | Data Engineer &amp; Applied AI" property="og:title"/>
 <meta content="Projets Data Engineering et IA appliquée, architectures, résultats et décisions techniques." property="og:description"/>
@@ -30,22 +30,25 @@
 <div class="container hero-grid">
 <div>
 <span class="eyebrow">Projets de données et IA</span>
-<h1 id="titre-accueil">Hassna <span class="highlight">El-Bousiydy.</span></h1>
-<p class="hero-role">Data Engineer  ·  Applied AI</p><p class="lead">Je développe des pipelines de données, des traitements reproductibles et des outils de recherche sémantique. Je m'intéresse autant au fonctionnement qu'aux preuves de qualité.</p>
+<h1 id="titre-accueil">Hassna <span class="highlight">El-Bousiydy.</span>
+</h1>
+<p class="hero-role">Data Engineer  ·  Applied AI</p>
+<p class="lead">Je conçois des pipelines en Python et SQL, de l’ingestion aux modèles analytiques testés. Orchestration, streaming et cloud : des systèmes documentés, avec une spécialisation en IA appliquée.</p>
 
-<p class="hero-note">Ce portfolio réunit mes réalisations de formation. Pour chaque projet, je montre la méthode, les choix techniques et ce que les tests permettent réellement de conclure.</p>
+<p class="hero-note">Mes projets de formation montrent ce que j’ai construit, comment je l’ai vérifié et ce qu’il reste à améliorer.</p>
 <div class="actions">
 <a class="button button-primary" href="#projets">Découvrir les projets <span aria-hidden="true" class="arrow">↗</span></a>
 <a class="button button-secondary" href="https://github.com/Hassna-elbousiydy" rel="noopener noreferrer" target="_blank">Mon GitHub <span aria-hidden="true" class="arrow">↗</span></a>
 </div>
 <div aria-label="Domaines d'intervention" class="hero-meta">
-<span><i aria-hidden="true" class="dot"></i> Data pipelines &amp; qualité</span>
-<span><i aria-hidden="true" class="dot"></i> Python &amp; SQL</span>
+<span><i aria-hidden="true" class="dot"></i> Python · SQL · Qualité</span>
+<span><i aria-hidden="true" class="dot"></i> Streaming · AWS</span>
 <span><i aria-hidden="true" class="dot"></i> NLP &amp; RAG</span>
 </div>
 </div>
 <figure class="hero-photo-wrap">
-<div aria-hidden="true" class="hero-photo-bg"></div>
+<div aria-hidden="true" class="hero-photo-bg">
+</div>
 <img alt="Portrait professionnel de Hassna El-Bousiydy" class="hero-photo" fetchpriority="high" height="1125" src="assets/img/portrait-hassna.webp" width="900"/>
 <figcaption class="photo-stamp"><strong>Hassna El-Bousiydy</strong>Data Engineering &amp; IA appliquée</figcaption>
 </figure>
@@ -53,70 +56,206 @@
 </section>
 <section aria-labelledby="projets-titre" class="section projects-section" id="projets">
 <div class="container">
-<div class="section-head">
-<span class="section-kicker">01 / Réalisations</span>
-<h2 class="serif" id="projets-titre">Les projets, en détail.</h2>
-<p>Quatre réalisations de mon parcours Data Engineer. Chaque étude de cas présente le problème, les décisions et les éléments vérifiables.</p>
+<div class="section-head"><span class="section-kicker">01 / Réalisations</span>
+<h2 class="serif" id="projets-titre">Des données aux systèmes.</h2>
+<p>Cinq projets à découvrir en priorité, puis six études complémentaires. Chaque réalisation relie un besoin, des choix techniques et des preuves — dans son périmètre de formation.</p>
 </div>
-<div aria-label="Filtrer les projets" class="filter-bar" role="group">
-<button aria-pressed="true" class="filter-button" data-filter="all" type="button">Tous les projets</button>
-<button aria-pressed="false" class="filter-button" data-filter="ia" type="button">IA &amp; RAG</button>
-<button aria-pressed="false" class="filter-button" data-filter="pipeline" type="button">Pipelines</button>
-<button aria-pressed="false" class="filter-button" data-filter="database" type="button">Bases de données</button>
+<div class="filter-bar" role="group" aria-label="Filtrer les projets"><button class="filter-button" type="button" data-filter="all" aria-pressed="true">Tous</button><button class="filter-button" type="button" data-filter="pipeline" aria-pressed="false">Pipelines</button><button class="filter-button" type="button" data-filter="cloud" aria-pressed="false">Cloud</button><button class="filter-button" type="button" data-filter="streaming" aria-pressed="false">Streaming</button><button class="filter-button" type="button" data-filter="database" aria-pressed="false">SQL & NoSQL</button><button class="filter-button" type="button" data-filter="ia" aria-pressed="false">IA appliquée</button><button class="filter-button" type="button" data-filter="analyse" aria-pressed="false">Analyse</button>
 </div>
-<p aria-live="polite" class="muted" id="filter-feedback" style="font-size:.83rem;margin:-10px 0 22px">4 projets affichés.</p>
-<div class="project-grid">
-<article class="project-card" data-category="ia">
-<div class="project-cover rag"><img alt="Schéma de traitement OpenAgenda vers Mistral et FAISS" height="400" loading="lazy" src="assets/img/rag-pipeline.svg" width="1100"/><span class="cover-accent">Étude de cas détaillée</span></div>
-<div class="project-body">
-<span class="project-type">NLP / Recherche sémantique</span>
+<p class="filter-feedback muted" id="filter-feedback" aria-live="polite">11 projets affichés.</p>
+<div data-project-group>
+<h3 class="group-title">Projets à la une</h3>
+<div class="project-grid featured-grid">
+<article class="project-card" data-category="pipeline cloud database">
+<div class="project-cover mint"><img src="assets/img/pipeline-meteo.svg" alt="" width="1100" height="400" loading="lazy"><span class="cover-accent">ELT · Modélisation · Cloud</span>
+</div>
+<div class="project-body"><span class="project-type">ELT · Modélisation · Cloud</span>
+<h3>Pipeline météo sur AWS</h3>
+<p>Des sources météo hétérogènes à des tables analytiques testées, avec ingestion locale et exécution des transformations sur AWS.</p>
+<div class="project-measures">
+<div><strong>7</strong><small>modèles dbt</small>
+</div>
+<div><strong>24</strong><small>tests documentés</small>
+</div>
+</div>
+<div class="project-tags"><span>Python</span><span>SQL</span><span>Airbyte</span><span>PostgreSQL</span><span>dbt</span><span>AWS</span>
+</div><a class="card-link" href="projets/pipeline-meteo.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card" data-category="streaming pipeline">
+<div class="project-cover mint"><img src="assets/img/streaming-tickets.svg" alt="" width="1100" height="400" loading="lazy"><span class="cover-accent">Streaming · Event time</span>
+</div>
+<div class="project-body"><span class="project-type">Streaming · Event time</span>
+<h3>Tickets clients en streaming</h3>
+<p>Traiter des tickets simulés en continu avec Redpanda et PySpark, puis conserver les événements et leurs agrégations en Parquet.</p>
+<div class="project-measures">
+<div><strong>5 min</strong><small>fenêtres</small>
+</div>
+<div><strong>Parquet</strong><small>sorties persistées</small>
+</div>
+</div>
+<div class="project-tags"><span>Python</span><span>Redpanda</span><span>Kafka API</span><span>PySpark</span><span>Parquet</span>
+</div><a class="card-link" href="projets/streaming-tickets.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card" data-category="pipeline database">
+<div class="project-cover mint"><img src="assets/img/sport-data.svg" alt="" width="1100" height="400" loading="lazy"><span class="cover-accent">Orchestration · SQL · Reporting</span>
+</div>
+<div class="project-body"><span class="project-type">Orchestration · SQL · Reporting</span>
+<h3>Sport Data : des règles aux indicateurs</h3>
+<p>Un POC qui transforme des fichiers RH et sportifs en règles métier paramétrables, trajets validés et indicateurs Power BI.</p>
+<div class="project-measures">
+<div><strong>2 434</strong><small>activités simulées</small>
+</div>
+<div><strong>10</strong><small>tests documentés</small>
+</div>
+</div>
+<div class="project-tags"><span>Python</span><span>PostgreSQL</span><span>Prefect</span><span>Google Routes</span><span>pytest</span><span>Power BI</span>
+</div><a class="card-link" href="projets/sport-data.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card" data-category="pipeline database">
+<div class="project-cover mint"><img src="assets/img/orchestration-kestra.svg" alt="" width="1100" height="400" loading="lazy"><span class="cover-accent">Workflows · Qualité · DuckDB</span>
+</div>
+<div class="project-body"><span class="project-type">Workflows · Qualité · DuckDB</span>
+<h3>Bottleneck : orchestration avec Kestra</h3>
+<p>Rapprocher les sources ERP et e-commerce dans un workflow contrôlé, du nettoyage des clés aux exports métier.</p>
+<div class="project-measures">
+<div><strong>714</strong><small>produits</small>
+</div>
+<div><strong>DuckDB</strong><small>jointures SQL</small>
+</div>
+</div>
+<div class="project-tags"><span>Kestra</span><span>Python</span><span>pandas</span><span>DuckDB</span><span>SQL</span>
+</div><a class="card-link" href="projets/orchestration-kestra.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card" data-category="ia pipeline">
+<div class="project-cover mint"><img src="assets/img/rag-pipeline.svg" alt="" width="1100" height="400" loading="lazy"><span class="cover-accent">Recherche sémantique · Évaluation</span>
+</div>
+<div class="project-body"><span class="project-type">Recherche sémantique · Évaluation</span>
 <h3>Puls-Events RAG</h3>
-<p>Concevoir un assistant de découverte d'événements culturels combinant données OpenAgenda, recherche vectorielle et réponses contextualisées.</p>
-<div class="project-measures"><div><strong>12 763</strong><small>événements uniques</small></div><div><strong>0,9545</strong><small>MRR</small></div><div><strong>74</strong><small>tests réussis</small></div></div>
-<div class="project-tags"><span>Python</span><span>FAISS</span><span>Mistral</span><span>LangChain</span><span>Docker</span></div>
-<a class="card-link" href="projets/puls-events-rag.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+<p>Préparer, indexer et interroger des événements culturels, puis évaluer séparément la recherche et les réponses.</p>
+<div class="project-measures">
+<div><strong>12 763</strong><small>événements</small>
+</div>
+<div><strong>74</strong><small>tests documentés</small>
+</div>
+</div>
+<div class="project-tags"><span>Python</span><span>FAISS</span><span>Mistral</span><span>LangChain</span><span>Docker</span>
+</div><a class="card-link" href="projets/puls-events-rag.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
 </div>
 </article>
-<article class="project-card" data-category="pipeline">
-<div class="project-cover mint"><img alt="Pipeline météo avec ingestion, PostgreSQL, dbt et composants cloud" height="400" loading="lazy" src="assets/img/weather-pipeline.svg" width="1100"/><span class="cover-accent">Data pipeline</span></div>
-<div class="project-body">
-<span class="project-type">ELT / Modélisation / Qualité</span>
-<h3>Pipeline de données météo</h3>
-<p>Structurer un flux de données depuis l'ingestion jusqu'aux modèles analytiques, avec des contrôles qualité et une étude de son exécution cloud.</p>
-<div class="project-tags"><span>PostgreSQL</span><span>Airbyte</span><span>dbt</span><span>AWS</span></div>
-<a class="card-link" href="projets/pipeline-meteo.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</div>
+<div data-project-group class="supporting-projects">
+<h3 class="group-title">Pour approfondir</h3>
+<p class="muted">Bases de données, model serving, investigation et analyse.</p>
+<div class="project-grid supporting-grid">
+<article class="project-card supporting-card" data-category="database pipeline">
+<div class="project-body"><span class="project-type">Migration · Validation · Indexation</span>
+<h3>Migration contrôlée vers MongoDB</h3>
+<p>Transformer un CSV de données de santé en documents typés, avec contrôles, insertion par lots, index et journalisation.</p>
+<div class="project-tags"><span>Python</span><span>MongoDB</span><span>Docker</span><span>unittest</span>
+</div><a class="card-link" href="projets/migration-mongodb.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
 </div>
 </article>
-<article class="project-card" data-category="database">
-<div class="project-cover wood"><img alt="Étapes de migration de données CSV vers MongoDB" height="400" loading="lazy" src="assets/img/mongo-pipeline.svg" width="1100"/><span class="cover-accent">Base NoSQL</span></div>
-<div class="project-body">
-<span class="project-type">NoSQL / Migration contrôlée</span>
-<h3>Migration vers MongoDB</h3>
-<p>Transformer des données de santé structurées en documents, fiabiliser la migration et réfléchir à la validation, à l'indexation et aux accès.</p>
-<div class="project-tags"><span>Python</span><span>MongoDB</span><span>Docker</span><span>Validation</span></div>
-<a class="card-link" href="projets/migration-mongodb.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+<article class="project-card supporting-card" data-category="database">
+<div class="project-body"><span class="project-type">NoSQL · Réplication · Sharding</span>
+<h3>NosCités : explorer MongoDB distribué</h3>
+<p>Analyser des données Airbnb et expérimenter réplication, bascule et répartition par ville dans un laboratoire local.</p>
+<div class="project-tags"><span>MongoDB</span><span>Polars</span><span>Python</span><span>Power BI</span>
+</div><a class="card-link" href="projets/mongodb-distribue.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
 </div>
 </article>
-<article class="project-card" data-category="pipeline">
-<div class="project-cover mist"><img alt="Étapes d'orchestration de sources multiples avec Kestra" height="400" loading="lazy" src="assets/img/kestra-pipeline.svg" width="1100"/><span class="cover-accent">Automatisation</span></div>
-<div class="project-body">
-<span class="project-type">Orchestration / Workflows</span>
-<h3>Pipeline orchestré avec Kestra</h3>
-<p>Coordonner des étapes de préparation et de rapprochement de données provenant de plusieurs sources, avec une sortie exploitable côté métier.</p>
-<div class="project-tags"><span>Kestra</span><span>SQL</span><span>Python</span><span>Contrôles</span></div>
-<a class="card-link" href="projets/orchestration-kestra.html">Lire l'étude de cas <span aria-hidden="true">↗</span></a>
+<article class="project-card supporting-card" data-category="ia">
+<div class="project-body"><span class="project-type">Machine Learning · Model serving</span>
+<h3>Seattle : du modèle à l’API</h3>
+<p>Estimer la consommation énergétique de bâtiments et servir le modèle via une API BentoML avec validation Pydantic.</p>
+<div class="project-tags"><span>scikit-learn</span><span>Python</span><span>BentoML</span><span>Pydantic</span>
+</div><a class="card-link" href="projets/seattle-energy-api.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
 </div>
 </article>
+<article class="project-card supporting-card" data-category="database">
+<div class="project-body"><span class="project-type">SQL · Modèle relationnel</span>
+<h3>DataImmo : concevoir et interroger</h3>
+<p>Passer de données immobilières à un modèle SQLite structuré, puis répondre à douze questions métier en SQL.</p>
+<div class="project-tags"><span>SQL</span><span>SQLite</span><span>Modélisation relationnelle</span>
+</div><a class="card-link" href="projets/dataimmo-sql.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card supporting-card" data-category="database analyse">
+<div class="project-body"><span class="project-type">Audit · SQL · Traçabilité</span>
+<h3>SuperSmartMarket : auditer les écarts</h3>
+<p>Investiguer des incohérences de reporting en croisant requêtes SQL, journaux disponibles et règles de calcul.</p>
+<div class="project-tags"><span>MySQL</span><span>SQL</span><span>Analyse de logs</span><span>Documentation</span>
+</div><a class="card-link" href="projets/audit-donnees.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+<article class="project-card supporting-card" data-category="analyse">
+<div class="project-body"><span class="project-type">Analyse · Qualité · Aide à la décision</span>
+<h3>Éducation : préparer les indicateurs</h3>
+<p>Préparer des données éducatives internationales et construire une lecture argumentée des besoins à partir d’indicateurs sélectionnés.</p>
+<div class="project-tags"><span>Python</span><span>pandas</span><span>NumPy</span><span>Matplotlib</span><span>Seaborn</span>
+</div><a class="card-link" href="projets/education-data.html">Lire l’étude de cas <span aria-hidden="true">↗</span></a>
+</div>
+</article>
+</div>
 </div>
 </div>
 </section>
-<section aria-labelledby="experts-title" class="section section-aside" id="expertises">
+<section class="section section-aside" id="expertises" aria-labelledby="experts-title">
 <div class="container">
-<div class="section-head"><span class="section-kicker">02 / Expertise</span><h2 class="serif" id="experts-title">Ce que je mets en pratique.</h2><p>Ingestion, modélisation, orchestration, recherche sémantique : j'utilise ces outils avec des tests, des critères métier et une documentation précise.</p></div>
+<div class="section-head"><span class="section-kicker">02 / Compétences en pratique</span>
+<h2 class="serif" id="experts-title">Une compétence, une preuve.</h2>
+<p>Des outils choisis pour un besoin précis, et des réalisations pour expliquer comment je les utilise.</p>
+</div>
 <div class="expertise-grid">
-<article class="expertise-card"><span class="expertise-num">01</span><h3>Construire des flux fiables</h3><p>Ingestion, transformations, modélisation SQL et NoSQL, orchestration et reproductibilité. Les outils servent une architecture claire.</p></article>
-<article class="expertise-card"><span class="expertise-num">02</span><h3>Vérifier les données</h3><p>Contrôles métier, tests automatisés, déduplication, métriques, traçabilité des traitements et analyse des limites.</p></article>
-<article class="expertise-card"><span class="expertise-num">03</span><h3>Évaluer l'IA appliquée</h3><p>Embeddings, recherche sémantique, RAG et évaluation séparée du retrieval et de la génération pour des réponses mieux fondées.</p></article>
+<article class="expertise-card"><span class="expertise-num">01</span>
+<h3>Modéliser et transformer</h3>
+<p>SQL, PostgreSQL, SQLite, dbt et DuckDB : clés, relations, couches analytiques, jointures et fonctions de fenêtre.</p><a class="text-link skill-link" href="projets/pipeline-meteo.html">Voir les modèles météo ↗</a>
+</article>
+<article class="expertise-card"><span class="expertise-num">02</span>
+<h3>Orchestrer et contrôler</h3>
+<p>Kestra et Prefect : dépendances, planification, reprises, tests de données et règles métier.</p><a class="text-link skill-link" href="projets/sport-data.html">Explorer Sport Data ↗</a>
+</article>
+<article class="expertise-card"><span class="expertise-num">03</span>
+<h3>Traiter les flux</h3>
+<p>PySpark Structured Streaming et Redpanda : schémas, temps événementiel, fenêtres et checkpoints.</p><a class="text-link skill-link" href="projets/streaming-tickets.html">Lire le cas streaming ↗</a>
+</article>
+<article class="expertise-card"><span class="expertise-num">04</span>
+<h3>Exécuter dans le cloud</h3>
+<p>RDS, ECR, ECS Fargate, EventBridge, CloudWatch et Secrets Manager dans le projet météo.</p><a class="text-link skill-link" href="projets/pipeline-meteo.html">Distinguer local et AWS ↗</a>
+</article>
+<article class="expertise-card"><span class="expertise-num">05</span>
+<h3>Structurer le stockage</h3>
+<p>MongoDB : migration, indexation, agrégations et expérimentation locale de réplication et de sharding.</p><a class="text-link skill-link" href="projets/mongodb-distribue.html">Explorer le laboratoire NoSQL ↗</a>
+</article>
+<article class="expertise-card"><span class="expertise-num">06</span>
+<h3>Servir et évaluer l’IA</h3>
+<p>API BentoML/Pydantic, recherche vectorielle et RAG : validation des entrées, tests et évaluation documentée.</p><a class="text-link skill-link" href="projets/seattle-energy-api.html">Du modèle à l’API ↗</a>
+</article>
+</div>
+<p class="skills-note">En conception : architecture hybride, migration cloud et maîtrise des coûts. Ces études sont distinguées des composants effectivement exécutés. <a class="text-link" href="projets/streaming-tickets.html#cloud">Voir le périmètre étudié</a>.</p>
+</div>
+</section>
+<section class="section research-section" aria-labelledby="research-title">
+<div class="container">
+<div class="section-head"><span class="section-kicker">03 / Projets complémentaires</span>
+<h2 class="serif" id="research-title">Données scientifiques &amp; IA.</h2>
+<p>Deux dépôts publics à explorer séparément des études de cas du parcours de formation.</p>
+</div>
+<div class="research-grid">
+<article class="research-card"><span class="project-type">Recherche sémantique</span>
+<h3>Interroger des publications</h3>
+<p>MiniLM, FAISS, reranking cross-encoder et génération locale FLAN-T5. Une expérimentation centrée sur la provenance des passages et la séparation retrieval / génération.</p>
+<p class="muted">Évaluation limitée à 25 questions, dont trois hors domaine.</p><a class="text-link" href="https://github.com/Hassna-elbousiydy/Semantic-search-chatbot" target="_blank" rel="noopener noreferrer">Explorer le dépôt ↗</a>
+</article>
+<article class="research-card"><span class="project-type">Données scientifiques</span>
+<h3>De la publication à la simulation</h3>
+<p>Extraction de tableaux PDF, provenance des cellules, normalisation numérique et correspondance de paramètres vers une reproduction contrôlée avec PyBaMM.</p>
+<p class="muted">Périmètre : un article, deux tableaux et sept paramètres remplacés.</p><a class="text-link" href="https://github.com/Hassna-elbousiydy/literature-to-simulation-bridge" target="_blank" rel="noopener noreferrer">Explorer le dépôt ↗</a>
+</article>
 </div>
 </div>
 </section>
@@ -124,18 +263,27 @@
 <div class="container about-grid">
 <figure class="about-photo"><img alt="Illustration d’un pipeline de données, des sources à la validation et à l’analyse" height="900" loading="lazy" src="assets/img/illustration-flux-donnees.webp" width="1200"/><figcaption>Des données aux résultats : structurer, contrôler et analyser.</figcaption></figure>
 <div class="about-copy">
-<span class="section-kicker">03 / À propos</span>
-<h2 class="serif" id="about-title">Une curiosité technique, très concrète.</h2>
+<span class="section-kicker">04 / Parcours</span>
+<h2 class="serif" id="about-title">Construire, vérifier, expliquer.</h2>
 <p>J'aime analyser un problème jusqu'à en comprendre les contraintes. Ensuite, je construis, je teste et je reviens sur les résultats lorsque quelque chose ne tient pas.</p>
-<p>Ce portfolio présente actuellement les réalisations de mon parcours Data Engineer chez OpenClassrooms (2025-2026). Son architecture est pensée pour accueillir plus tard mes autres expériences et projets, sans les mélanger à ce périmètre de formation.</p>
-<div aria-label="Compétences" class="about-list"><span>Python &amp; SQL</span><span>PostgreSQL &amp; MongoDB</span><span>Airbyte &amp; dbt</span><span>Kestra &amp; Docker</span><span>FAISS &amp; Mistral</span><span>Tests &amp; qualité</span></div>
-<div class="progress-strip"><span>Explorer les sources</span><span>Concevoir</span><span>Tester</span><span>Documenter</span></div>
+<p><strong>Projets appliqués en Data Engineering — OpenClassrooms, 2025–2026.</strong> Mon parcours couvre la préparation des données, les bases relationnelles et NoSQL, les pipelines batch et streaming, puis l’IA appliquée. Chaque étude de cas distingue réalisation, expérimentation et proposition d’architecture.</p>
+<div aria-label="Compétences" class="about-list"><span>Python &amp; SQL</span><span>PostgreSQL &amp; MongoDB</span><span>Airbyte &amp; dbt</span><span>Kestra &amp; Prefect</span><span>PySpark &amp; Redpanda</span><span>AWS &amp; Docker</span><span>FAISS &amp; Mistral</span><span>Tests &amp; qualité</span>
+</div>
+<div class="roadmap-note"><span class="status-badge">En cours</span>
+<h3>Puls : préparer le passage au MVP</h3>
+<p>Besoins, parties prenantes, critères d’acceptation et risques. Le déploiement reste à réaliser.</p><a class="text-link" href="projets/puls-events-rag.html#mvp">Voir la feuille de route ↗</a>
+</div>
+<div class="progress-strip"><span>Explorer les sources</span><span>Concevoir</span><span>Tester</span><span>Documenter</span>
+</div>
 </div>
 </div>
 </section>
 <section aria-labelledby="contact-title" class="contact-section" id="contact">
 <div class="container contact-grid">
-<div><span class="section-kicker">04 / Contact</span><h2 class="serif" id="contact-title">Un projet à discuter ?</h2><p>Pour échanger sur un besoin en données, un projet IA ou une collaboration, vous pouvez me contacter ici.</p></div>
+<div><span class="section-kicker">05 / Contact</span>
+<h2 class="serif" id="contact-title">Un projet à discuter ?</h2>
+<p>Pour échanger sur un besoin en données, un projet IA ou une collaboration, vous pouvez me contacter ici.</p>
+</div>
 <div class="contact-links">
 <a class="contact-link" href="mailto:722msbv09@mozmail.com?subject=Contact%20via%20portfolio"><span>Email<small>722msbv09@mozmail.com</small></span><span aria-hidden="true">↗</span></a>
 <a class="contact-link" href="https://www.linkedin.com/in/hassna-el-bousiydy-228a91142/" rel="noopener noreferrer" target="_blank"><span>LinkedIn<small>Parcours et échanges professionnels</small></span><span aria-hidden="true">↗</span></a>
@@ -145,6 +293,10 @@
 </div>
 </section>
 </main>
-<footer class="site-footer"><div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering &amp; Applied AI</span><div class="footer-links"><a href="#projets">Projets</a><a href="mailto:722msbv09@mozmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" rel="noopener noreferrer" target="_blank">GitHub</a><a href="mentions-legales.html">Mentions légales</a></div></div></footer>
+<footer class="site-footer">
+<div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering &amp; Applied AI</span>
+<div class="footer-links"><a href="#projets">Projets</a><a href="mailto:722msbv09@mozmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" rel="noopener noreferrer" target="_blank">GitHub</a><a href="mentions-legales.html">Mentions légales</a>
+</div>
+</div></footer>
 </body>
 </html>

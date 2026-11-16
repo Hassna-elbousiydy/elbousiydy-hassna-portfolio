@@ -1,0 +1,691 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : Elbousiydy_Hassna_3_service_042026.py
+# src/service.py
+
+# ============================================================
+
+# Service BentoML — API de prédiction de consommation énergétique
+
+# ============================================================
+
+
+
+import bentoml
+
+import numpy as np
+
+import pandas as pd
+
+from bentoml.io import JSON
+
+from validation import BuildingInput, PredictionOutput
+
+
+
+# ── 1. Charger le modèle et les métadonnées ──
+
+# Charger le pipeline sklearn
+
+pipeline = bentoml.sklearn.load_model('seattle_energy_model:latest')
+
+
+
+# Récupérer les features depuis les custom_objects
+
+bento_model = bentoml.models.get('seattle_energy_model:latest')
+
+ALL_FEATURES = bento_model.custom_objects['all_features']
+
+
+
+# ── 2. Définir le service ──
+
+svc = bentoml.Service(
+
+    name='seattle_energy_api',
+
+)
+
+
+
+
+
+# ── 3. Endpoint /predict ───────────────────────────────────
+
+@svc.api(input=JSON(pydantic_model=BuildingInput),
+
+         output=JSON(pydantic_model=PredictionOutput))
+
+def predict(building: BuildingInput) -> PredictionOutput:
+
+    """
+
+    Prédit la consommation énergétique d'un bâtiment de Seattle.
+
+
+
+    L'utilisateur envoie des données brutes (non encodées).
+
+    Le service calcule les features dérivées et gère le preprocessing.
+
+    """
+
+
+
+    # ── A. Calculer les features dérivées ─────────────────
+
+    building_age = 2016 - building.YearBuilt
+
+
+
+    # GFAperFloor : surface par étage
+
+    gfa_per_floor = (building.PropertyGFATotal / building.NumberofFloors
+
+                     if building.NumberofFloors > 0
+
+                     else building.PropertyGFATotal)
+
+
+
+    # ── B. Construire le DataFrame dans le bon ordre ──────
+
+    # CRITIQUE : l'ordre doit correspondre EXACTEMENT à all_features
+
+    data = {
+
+        'NumberofBuildings':   building.NumberofBuildings,
+
+        'NumberofFloors':      building.NumberofFloors,
+
+        'PropertyGFATotal':    building.PropertyGFATotal,
+
+        'Latitude':            building.Latitude,
+
+        'Longitude':           building.Longitude,
+
+        'CouncilDistrictCode': building.CouncilDistrictCode,
+
+        'BuildingAge':         building_age,
+
+        'ParkingRatio':        building.ParkingRatio,
+
+        'GFAperFloor':         gfa_per_floor,
+
+        'LargestUseRatio':     building.LargestUseRatio,
+
+        'EnergySourceCount':   building.EnergySourceCount,
+
+        'PrimaryPropertyType': building.PrimaryPropertyType,
+
+        'Neighborhood':        building.Neighborhood,
+
+    }
+
+
+
+    # Créer le DataFrame avec colonnes dans l'ordre exact d'entraînement
+
+    df = pd.DataFrame([data])[ALL_FEATURES]
+
+
+
+    # ── C. Prédiction via le pipeline ────────────────────
+
+    # Le pipeline inclut StandardScaler + OHE + RandomForest
+
+    # Il gère lui-même le preprocessing !
+
+    log_prediction = pipeline.predict(df)[0]
+
+
+
+    # ── D. Inverser la transformation log1p ──────────────
+
+    # La target a été transformée en log1p(SiteEnergyUse)
+
+    # On reconvertit pour obtenir la valeur en kBtu
+
+    predicted_kbtu = float(np.expm1(log_prediction))
+
+
+
+    # Conversion kBtu → MWh : 1 MWh = 3412.14 kBtu
+
+    predicted_mwh = predicted_kbtu / 3412.14
+
+
+
+    return PredictionOutput(
+
+        predicted_energy_kBtu=round(predicted_kbtu, 2),
+
+        predicted_energy_MWh=round(predicted_mwh, 4),
+
+        model_version=str(bento_model.tag),
+
+        input_building_age=building_age,
+
+    )
+
+
+
+SOURCE : Elbousiydy_Hassna_4_validation_042026.py
+# src/validation.py
+
+# ============================================================
+
+# Validation Pydantic v2 des données d'entrée
+
+# L'utilisateur envoie des données RAW (non encodées)
+
+# ============================================================
+
+
+
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from typing import Optional
+
+from enum import Enum
+
+
+
+
+
+# ── Types de bâtiments valides (valeurs du dataset Seattle) ──
+
+class BuildingType(str, Enum):
+
+    office_small       = 'Small- and Mid-Sized Office'
+
+    office_large       = 'Large Office'
+
+    hotel              = 'Hotel'
+
+    retail             = 'Retail Store'
+
+    warehouse          = 'Non-Refrigerated Warehouse'
+
+    school             = 'K-12 School'
+
+    hospital           = 'Hospital'
+
+    university         = 'College/University'
+
+    restaurant         = 'Restaurant'
+
+    other              = 'Other'
+
+    worship            = 'Worship Facility'
+
+    distribution       = 'Distribution Center'
+
+    lab                = 'Laboratory'
+
+    supermarket        = 'Supermarket/Grocery Store'
+
+    courthouse         = 'Courthouse'
+
+
+
+
+
+class BuildingInput(BaseModel):
+
+    """
+
+    Données envoyées par l'utilisateur à l'API /predict.
+
+    Toutes les valeurs sont dans leur forme ORIGINALE (avant preprocessing).
+
+    """
+
+
+
+    # ── Informations structurelles ──
+
+    YearBuilt: int = Field(
+
+        ...,
+
+        ge=1800, le=2016,
+
+        description='Année de construction (1800 ≤ YearBuilt ≤ 2016)',
+
+        examples=[1985]
+
+    )
+
+    PropertyGFATotal: float = Field(
+
+        ...,
+
+        gt=0, le=5_000_000,
+
+        description='Surface brute totale en pieds carrés (> 0)',
+
+        examples=[50000.0]
+
+    )
+
+    NumberofFloors: float = Field(
+
+        ...,
+
+        ge=1, le=200,
+
+        description='Nombre d\'étages (≥ 1)',
+
+        examples=[5.0]
+
+    )
+
+    NumberofBuildings: float = Field(
+
+        default=1.0,
+
+        ge=1,
+
+        description='Nombre de bâtiments dans la propriété (≥ 1)',
+
+        examples=[1.0]
+
+    )
+
+
+
+    # ── Localisation ──
+
+    Latitude: float = Field(
+
+        ...,
+
+        ge=47.0, le=48.0,
+
+        description='Latitude Seattle (47.0 ≤ lat ≤ 48.0)',
+
+        examples=[47.6062]
+
+    )
+
+    Longitude: float = Field(
+
+        ...,
+
+        ge=-123.0, le=-121.0,
+
+        description='Longitude Seattle (-123.0 ≤ lon ≤ -121.0)',
+
+        examples=[-122.3321]
+
+    )
+
+    CouncilDistrictCode: int = Field(
+
+        ...,
+
+        ge=1, le=7,
+
+        description='Code du district municipal de Seattle (1 à 7)',
+
+        examples=[7]
+
+    )
+
+
+
+    # ── Type de bâtiment ──
+
+    PrimaryPropertyType: str = Field(
+
+        ...,
+
+        description='Type principal de bâtiment',
+
+        examples=['Small- and Mid-Sized Office']
+
+    )
+
+    Neighborhood: str = Field(
+
+        ...,
+
+        min_length=2, max_length=100,
+
+        description='Quartier de Seattle',
+
+        examples=['DOWNTOWN']
+
+    )
+
+
+
+    # ── Features dérivées (calculées auto si absentes) ──
+
+    ParkingRatio: Optional[float] = Field(
+
+        default=0.0,
+
+        ge=0.0,
+
+        description='Ratio parking (optionnel, défaut 0)',
+
+        examples=[0.5]
+
+    )
+
+    LargestUseRatio: Optional[float] = Field(
+
+        default=1.0,
+
+        ge=0.0, le=1.0,
+
+        description='Ratio du plus grand usage (0 à 1)',
+
+        examples=[0.85]
+
+    )
+
+    EnergySourceCount: Optional[int] = Field(
+
+        default=1,
+
+        ge=1, le=10,
+
+        description='Nombre de sources d\'énergie utilisées',
+
+        examples=[2]
+
+    )
+
+
+
+    # ── Validateur personnalisé : cohérence de la surface ──
+
+    @field_validator('PropertyGFATotal')
+
+    @classmethod
+
+    def surface_minimum_realiste(cls, v):
+
+        if v < 100:
+
+            raise ValueError(
+
+                f'Surface {v} ft² trop petite pour un bâtiment non-résidentiel '
+
+                f'(minimum 100 ft²)'
+
+            )
+
+        return v
+
+
+
+    # ── Validateur croisé : cohérence surface / nombre d'étages ──
+
+    @model_validator(mode='after')
+
+    def coherence_surface_etages(self):
+
+        gfa_per_floor = self.PropertyGFATotal / self.NumberofFloors
+
+        if gfa_per_floor < 50:
+
+            raise ValueError(
+
+                f'Surface par étage ({gfa_per_floor:.0f} ft²) incohérente. '
+
+                f'Verifiez PropertyGFATotal ({self.PropertyGFATotal}) '
+
+                f'et NumberofFloors ({self.NumberofFloors}).'
+
+            )
+
+        return self
+
+
+
+
+
+class PredictionOutput(BaseModel):
+
+    """Réponse retournée par l'API."""
+
+    predicted_energy_kBtu: float = Field(
+
+        ...,
+
+        description='Consommation prédite en kBtu'
+
+    )
+
+    predicted_energy_MWh: float = Field(
+
+        ...,
+
+        description='Consommation prédite en MWh (pour référence)'
+
+    )
+
+    model_version: str = Field(..., description='Tag du modèle BentoML utilisé')
+
+    input_building_age: int = Field(..., description='Âge calculé du bâtiment')
+
+SOURCE : test_api.py
+# src/test_api.py
+
+# ============================================================
+
+# Tests de l'API en local — à exécuter PENDANT que bentoml serve tourne
+
+# Prérequis : pip install requests
+
+# Exécution : python src/test_api.py
+
+# ============================================================
+
+
+
+import requests
+
+import json
+
+
+
+BASE_URL = 'http://localhost:3000'
+
+
+
+
+
+def test_valid_building():
+
+    """Test 1 : bâtiment valide — doit retourner une prédiction."""
+
+    payload = {
+
+        'YearBuilt': 1985,
+
+        'PropertyGFATotal': 50000.0,
+
+        'NumberofFloors': 5.0,
+
+        'NumberofBuildings': 1.0,
+
+        'Latitude': 47.6062,
+
+        'Longitude': -122.3321,
+
+        'CouncilDistrictCode': 7,
+
+        'PrimaryPropertyType': 'Small- and Mid-Sized Office',
+
+        'Neighborhood': 'DOWNTOWN',
+
+        'ParkingRatio': 0.5,
+
+        'LargestUseRatio': 0.85,
+
+        'EnergySourceCount': 2
+
+    }
+
+    r = requests.post(f'{BASE_URL}/predict', json=payload)
+
+    print('=== TEST 1 : Bâtiment valide ===')
+
+    print(f'Status: {r.status_code}')
+
+    print(f'Réponse: {json.dumps(r.json(), indent=2)}')
+
+    assert r.status_code == 200, f'ÉCHEC : {r.text}'
+
+    print('✓ PASSÉ\n')
+
+
+
+
+
+def test_invalid_year():
+
+    """Test 2 : YearBuilt invalide — doit retourner 400 ou 422."""
+
+    payload = {
+
+        'YearBuilt': 1750,   # < 1800 → doit être rejeté
+
+        'PropertyGFATotal': 50000.0,
+
+        'NumberofFloors': 5.0,
+
+        'Latitude': 47.6062,
+
+        'Longitude': -122.3321,
+
+        'CouncilDistrictCode': 7,
+
+        'PrimaryPropertyType': 'Small- and Mid-Sized Office',
+
+        'Neighborhood': 'DOWNTOWN',
+
+    }
+
+    r = requests.post(f'{BASE_URL}/predict', json=payload)
+
+    print('=== TEST 2 : Année invalide (1750) ===')
+
+    print(f'Status: {r.status_code}')
+
+    # BentoML peut retourner 400 ou 422 selon la version
+
+    assert r.status_code in [400, 422], f'ÉCHEC — reçu {r.status_code}, attendu 400 ou 422'
+
+    print('✓ PASSÉ (Validation rejetée correctement)\n')
+
+
+
+
+
+def test_invalid_surface():
+
+    """Test 3 : Surface incohérente — doit retourner 400 ou 422."""
+
+    payload = {
+
+        'YearBuilt': 1985,
+
+        'PropertyGFATotal': 10.0,   # < 100 ft² → rejeté
+
+        'NumberofFloors': 5.0,
+
+        'Latitude': 47.6062,
+
+        'Longitude': -122.3321,
+
+        'CouncilDistrictCode': 7,
+
+        'PrimaryPropertyType': 'Hotel',
+
+        'Neighborhood': 'BELLTOWN',
+
+    }
+
+    r = requests.post(f'{BASE_URL}/predict', json=payload)
+
+    print('=== TEST 3 : Surface trop petite ===')
+
+    print(f'Status: {r.status_code}')
+
+    assert r.status_code in [400, 422], f'ÉCHEC — reçu {r.status_code}, attendu 400 ou 422'
+
+    print('✓ PASSÉ (Validation rejetée correctement)\n')
+
+
+
+
+
+def test_grand_immeuble():
+
+    """Test 4 : Grand immeuble de bureaux."""
+
+    payload = {
+
+        'YearBuilt': 1999,
+
+        'PropertyGFATotal': 500000.0,
+
+        'NumberofFloors': 40.0,
+
+        'NumberofBuildings': 1.0,
+
+        'Latitude': 47.608,
+
+        'Longitude': -122.335,
+
+        'CouncilDistrictCode': 7,
+
+        'PrimaryPropertyType': 'Large Office',
+
+        'Neighborhood': 'DOWNTOWN',
+
+        'ParkingRatio': 0.2,
+
+        'LargestUseRatio': 1.0,
+
+        'EnergySourceCount': 3
+
+    }
+
+    r = requests.post(f'{BASE_URL}/predict', json=payload)
+
+    print('=== TEST 4 : Grand immeuble ===')
+
+    print(f'Status: {r.status_code}')
+
+    print(f'Réponse: {json.dumps(r.json(), indent=2)}')
+
+    assert r.status_code == 200
+
+    print('✓ PASSÉ\n')
+
+
+
+
+
+if __name__ == '__main__':
+
+    print('Démarrage des tests API...\n')
+
+    test_valid_building()
+
+    test_invalid_year()
+
+    test_invalid_surface()
+
+    test_grand_immeuble()
+
+    print('✓ TOUS LES TESTS PASSÉS !')

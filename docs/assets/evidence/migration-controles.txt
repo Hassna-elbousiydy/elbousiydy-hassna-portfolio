@@ -1,0 +1,141 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : migrate_data.py
+def integrity_before(rows: List[Dict[str, str]]) -> Dict[str, Any]:
+    report: Dict[str, Any] = {}
+    if not rows:
+        report["row_count"] = 0
+        report["missing_columns"] = EXPECTED_COLUMNS[:]  # tout manque
+        report["extra_columns"] = []
+        report["missing_values_total"] = 0
+        report["missing_values_by_column"] = {c: 0 for c in EXPECTED_COLUMNS}
+        report["duplicate_rows"] = 0
+        return report
+
+    cols = list(rows[0].keys())
+    report["row_count"] = len(rows)
+
+    missing = [c for c in EXPECTED_COLUMNS if c not in cols]
+    extra = [c for c in cols if c not in EXPECTED_COLUMNS]
+    report["missing_columns"] = missing
+    report["extra_columns"] = extra
+
+    # manquants (par colonne)
+    missing_by_col = {c: 0 for c in EXPECTED_COLUMNS}
+    total_missing = 0
+    for r in rows:
+        for c in EXPECTED_COLUMNS:
+            v = r.get(c, "")
+            if v is None or str(v).strip() == "":
+                missing_by_col[c] += 1
+                total_missing += 1
+    report["missing_values_by_column"] = missing_by_col
+    report["missing_values_total"] = total_missing
+
+    # doublons "lignes identiques" (sur toutes les colonnes attendues)
+    seen = set()
+    dup = 0
+    for r in rows:
+        key = tuple((c, (r.get(c) or "").strip()) for c in EXPECTED_COLUMNS)
+        if key in seen:
+            dup += 1
+        else:
+            seen.add(key)
+    report["duplicate_rows"] = dup
+
+    return report
+
+def assert_before(report: Dict[str, Any]) -> None:
+    if report["row_count"] == 0:
+        raise ValueError("CSV vide: aucune ligne de données trouvée.")
+    if report["missing_columns"]:
+        raise ValueError(f"CSV invalide: colonnes manquantes: {report['missing_columns']}")
+
+def create_indexes(col: Collection, logger: logging.Logger) -> None:
+    logger.info("Création des index...")
+    col.create_index([("name", ASCENDING)], name="idx_name")
+    col.create_index([("age", ASCENDING)], name="idx_age")
+    col.create_index([("medical_condition", ASCENDING)], name="idx_medical_condition")
+    col.create_index([("date_of_admission", DESCENDING)], name="idx_admission_date")
+    col.create_index([("hospital", ASCENDING)], name="idx_hospital")
+    col.create_index([("blood_type", ASCENDING)], name="idx_blood_type")
+    col.create_index([("doctor", ASCENDING)], name="idx_doctor")
+    col.create_index([("hospital", ASCENDING), ("date_of_admission", DESCENDING)], name="idx_hospital_admission")
+    col.create_index([("name", TEXT), ("doctor", TEXT), ("hospital", TEXT)], name="idx_text_search")
+    logger.info("✓ Index créés")
+
+def insert_in_batches(col: Collection, docs: List[Dict[str, Any]], logger: logging.Logger, batch_size: int = 500) -> Dict[str, int]:
+    stats = {"successful_inserts": 0, "failed_inserts": 0}
+    total_batches = (len(docs) + batch_size - 1) // batch_size
+    logger.info("Insertion de %d documents en %d lots...", len(docs), total_batches)
+
+    for i in range(0, len(docs), batch_size):
+        batch = docs[i:i + batch_size]
+        batch_num = (i // batch_size) + 1
+        try:
+            res = col.insert_many(batch, ordered=False)
+            stats["successful_inserts"] += len(res.inserted_ids)
+            logger.info("✓ Lot %d/%d: %d insérés", batch_num, total_batches, len(res.inserted_ids))
+        except BulkWriteError as bwe:
+            successful = bwe.details.get("nInserted", 0)
+            failed = len(batch) - successful
+            stats["successful_inserts"] += successful
+            stats["failed_inserts"] += failed
+            logger.warning("⚠ Lot %d/%d: %d réussis, %d échoués", batch_num, total_batches, successful, failed)
+        except Exception as e:
+            stats["failed_inserts"] += len(batch)
+            logger.error("✗ Erreur insertion lot %d/%d: %s", batch_num, total_batches, str(e))
+
+    return stats
+
+def transform_row(logger: logging.Logger, row: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    # Champs obligatoires (comme ton migrate_data.py)
+    if not row.get("Name") or not row.get("Age"):
+        return None
+
+    name = row["Name"].strip()
+    age = parse_int(logger, row.get("Age", ""))
+
+    # validation âge
+    if age is None or age < 0 or age > 120:
+        return None
+
+    doc = {
+        "name": name,
+        "age": age,
+        "gender": (row.get("Gender") or "").strip(),
+        "blood_type": (row.get("Blood Type") or "").strip(),
+        "medical_condition": (row.get("Medical Condition") or "").strip(),
+        "medication": (row.get("Medication") or "").strip(),
+        "test_results": (row.get("Test Results") or "").strip(),
+        "date_of_admission": parse_date(logger, row.get("Date of Admission", "")),
+        "discharge_date": parse_date(logger, row.get("Discharge Date", "")),
+        "doctor": (row.get("Doctor") or "").strip(),
+        "hospital": (row.get("Hospital") or "").strip(),
+        "room_number": parse_int(logger, row.get("Room Number", "")),
+        "admission_type": (row.get("Admission Type") or "").strip(),
+        "insurance_provider": (row.get("Insurance Provider") or "").strip(),
+        "billing_amount": parse_float(logger, row.get("Billing Amount", "")),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+    return doc
+
+def integrity_after(col: Collection, expected_rows: int) -> Dict[str, Any]:
+    count = col.count_documents({})
+    sample = col.find_one()
+    indexes = col.index_information()
+
+    report = {
+        "documents_count": int(count),
+        "expected_rows": int(expected_rows),
+        "count_matches": (int(count) == int(expected_rows)),
+        "sample_present": bool(sample),
+        "indexes_count": len(indexes),
+    }
+    return report
+
+def assert_after(report: Dict[str, Any]) -> None:
+    if report["documents_count"] == 0:
+        raise ValueError("Aucun document dans MongoDB après migration.")

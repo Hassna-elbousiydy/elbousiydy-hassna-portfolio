@@ -1,0 +1,678 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : Script_MongoDB_Partie2.js
+// ============================================================
+// PROJET 7 — NosCités | Partie 2 : Analyse de la base NoSQL
+// Script MongoDB (mongosh) — Toutes les requêtes documentées
+// Association NosCités | Dataset: listings_Paris.csv
+// Scraping: juin 2024 | 95 885 documents
+// ============================================================
+
+// CONNEXION (à lancer depuis le terminal Windows) :
+// mongosh "mongodb://localhost:27017"
+// use noscites
+
+// ============================================================
+// SECTION A — REQUÊTES SIMPLES (Étape 1)
+// ============================================================
+
+// -------------------------------------------------------
+// A1. Combien d'annonces y a-t-il par type de location ?
+// -------------------------------------------------------
+// Explication : On groupe les documents par le champ room_type
+// et on compte combien de documents appartiennent à chaque groupe.
+// C'est l'équivalent SQL de : SELECT room_type, COUNT(*) FROM listings GROUP BY room_type;
+
+db.listings.aggregate([
+  {
+    $group: {
+      _id: "$room_type",
+      nombre_annonces: { $sum: 1 }
+    }
+  },
+  {
+    $sort: { nombre_annonces: -1 }
+  }
+]);
+
+/* RÉSULTATS ATTENDUS :
+   Entire home/apt  → 85 733 annonces (89,4%)
+   Private room     →  8 975 annonces ( 9,4%)
+   Hotel room       →    776 annonces ( 0,8%)
+   Shared room      →    401 annonces ( 0,4%)
+   TOTAL            → 95 885 annonces
+*/
+
+// -------------------------------------------------------
+// A2. Quelles sont les 5 annonces avec le plus d'évaluations ?
+// -------------------------------------------------------
+// Explication : On trie par number_of_reviews (décroissant) et on prend les 5 premiers.
+// Equivalent SQL : SELECT id, name, number_of_reviews FROM listings ORDER BY number_of_reviews DESC LIMIT 5;
+
+db.listings.find(
+  {},
+  { _id: 0, id: 1, name: 1, host_name: 1, room_type: 1,
+    neighbourhood_cleansed: 1, number_of_reviews: 1 }
+).sort({ number_of_reviews: -1 }).limit(5);
+
+/* RÉSULTATS ATTENDUS :
+   1. ID 17222007 — "Sweet & cosy room next to Canal Saint Martin ❤️"
+      Host: Alexandra | Private room | Entrepôt | 3 067 avis
+   2. ID 26244787 — "Double/Twin Room, close to Opera and the Louvre with breakfast"
+      Host: David | Hotel room | Bourse | 2 620 avis
+   3. ID 41020735 — "Bed in Dorm of 8 Beds "The Big One" in Paris"
+      Host: The People | Shared room | Popincourt | 2 294 avis
+   4. ID 40194697 — "Comfortable bed in shared rooms of 8 in Paris 12e"
+      Host: The People Paris Bercy | Shared room | Reuilly | 2 105 avis
+   5. ID 35145338 — "Nice Room for 2 people"
+      Host: Hotel De L'Aqueduc | Hotel room | Entrepôt | 2 048 avis
+*/
+
+// -------------------------------------------------------
+// A3. Quel est le nombre total d'hôtes différents ?
+// -------------------------------------------------------
+// Explication : On utilise $addToSet pour collecter tous les host_id uniques,
+// puis $size pour les compter. Alternative : db.listings.distinct("host_id").length
+
+db.listings.aggregate([
+  {
+    $group: {
+      _id: null,
+      total_hotes_uniques: { $addToSet: "$host_id" }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      nombre_hotes: { $size: "$total_hotes_uniques" }
+    }
+  }
+]);
+
+// Version alternative plus simple :
+db.listings.distinct("host_id").length;
+
+/* RÉSULTAT ATTENDU : 71 979 hôtes différents */
+
+// -------------------------------------------------------
+// A4. Nombre de locations réservables instantanément
+// -------------------------------------------------------
+// Explication : instant_bookable = "t" (stocké comme string dans MongoDB après import CSV)
+
+db.listings.countDocuments({ instant_bookable: "t" });
+
+// Pour obtenir le pourcentage :
+db.listings.aggregate([
+  {
+    $group: {
+      _id: "$instant_bookable",
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      type: "$_id",
+      count: 1,
+      pourcentage: {
+        $multiply: [
+          { $divide: ["$count", 95885] },
+          100
+        ]
+      }
+    }
+  }
+]);
+
+/* RÉSULTATS ATTENDUS :
+   Réservation instantanée (t) : 22 094 annonces (23,0%)
+   Réservation manuelle (f)    : 73 791 annonces (77,0%)
+*/
+
+// -------------------------------------------------------
+// A5. Hôtes avec plus de 100 annonces sur les plateformes
+// -------------------------------------------------------
+// Explication : calculated_host_listings_count = nombre d'annonces de l'hôte
+// dans la zone géographique scrapée. On filtre > 100 et on déduplique par host_id.
+
+db.listings.aggregate([
+  {
+    $match: { calculated_host_listings_count: { $gt: 100 } }
+  },
+  {
+    $group: {
+      _id: "$host_id",
+      host_name: { $first: "$host_name" },
+      nb_annonces: { $first: "$calculated_host_listings_count" }
+    }
+  },
+  {
+    $sort: { nb_annonces: -1 }
+  },
+  {
+    $project: {
+      _id: 0,
+      host_id: "$_id",
+      host_name: 1,
+      nb_annonces: 1
+    }
+  }
+]);
+
+/* RÉSULTATS ATTENDUS (24 hôtes = 0,03% des hôtes) :
+   Blueground          : 730 annonces
+   Veeve               : 497 annonces
+   Pierre De WeHost    : 426 annonces
+   Sébastien           : 307 annonces
+   Cédric De ClickYourFlat : 274 annonces
+   FlexLiving          : 232 annonces
+   Ludovic             : 211 annonces
+   David Et Warren     : 210 annonces
+   Checkmyguest (x3)   : 104–189 annonces
+   ... (24 hôtes au total)
+*/
+
+// Pour le pourcentage des hôtes :
+// 24 hôtes / 71 979 hôtes = 0,033% des hôtes
+
+// -------------------------------------------------------
+// A6. Combien y a-t-il de super hôtes différents ?
+// -------------------------------------------------------
+// Explication : host_is_superhost = "t" pour les super hôtes
+// Un hôte peut avoir plusieurs annonces → on déduplique par host_id
+
+db.listings.aggregate([
+  {
+    $match: { host_is_superhost: "t" }
+  },
+  {
+    $group: {
+      _id: "$host_id"
+    }
+  },
+  {
+    $count: "nombre_superhotes"
+  }
+]);
+
+// Vérification rapide (sans déduplication par hôte) :
+db.listings.countDocuments({ host_is_superhost: "t" });
+
+/* RÉSULTATS ATTENDUS :
+   Super hôtes uniques : 10 027
+   Total annonces super hôtes : 14 776
+   Pourcentage des hôtes : 13,9% (10 027 / 71 979)
+*/
+
+// ============================================================
+// SECTION B — REQUÊTES COMPLEXES / AGRÉGATIONS (Étape 2)
+// Ces requêtes utilisent le framework d'agrégation MongoDB ($group, $sort, $project, etc.)
+// ============================================================
+
+// -------------------------------------------------------
+// B1. Taux de réservation moyen par mois par type de logement
+// -------------------------------------------------------
+// Explication : Le champ reviews_per_month est le proxy standard utilisé par
+// InsideAirbnb pour estimer le taux de réservation (= activité du logement).
+// On calcule la moyenne de reviews_per_month par room_type,
+// en excluant les documents sans valeur (null).
+
+db.listings.aggregate([
+  {
+    $match: {
+      reviews_per_month: { $exists: true, $ne: null, $type: "number" }
+    }
+  },
+  {
+    $group: {
+      _id: "$room_type",
+      taux_moyen_mois: { $avg: "$reviews_per_month" },
+      nb_logements: { $sum: 1 }
+    }
+  },
+  {
+    $sort: { taux_moyen_mois: -1 }
+  },
+  {
+    $project: {
+      _id: 0,
+      type_logement: "$_id",
+      taux_moyen_mois: { $round: ["$taux_moyen_mois", 3] },
+      nb_logements: 1
+    }
+  }
+]);
+
+/* RÉSULTATS ATTENDUS :
+   Shared room     : 1.920 avis/mois (proxy réservation)
+   Private room    : 1.301 avis/mois
+   Hotel room      : 1.086 avis/mois
+   Entire home/apt : 1.099 avis/mois
+
+   ⚠️ Interprétation : Les chambres partagées et privées ont
+   un taux d'activité plus élevé (rotation rapide, prix bas).
+   Les logements entiers dominent en volume (89%) mais sont
+   moins actifs en fréquence de réservation.
+*/
+
+// -------------------------------------------------------
+// B2. Médiane des nombre d'avis pour tous les logements
+// -------------------------------------------------------
+// Explication : MongoDB n'a pas de $median natif avant la version 7.
+// Méthode : tri → positionnement à 50% → extraction de la valeur.
+// Alternative Python/Polars recommandée pour les grandes collections.
+
+db.listings.aggregate([
+  {
+    $sort: { number_of_reviews: 1 }
+  },
+  {
+    $group: {
+      _id: null,
+      all_reviews: { $push: "$number_of_reviews" },
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      median: {
+        $arrayElemAt: [
+          "$all_reviews",
+          { $floor: { $divide: ["$count", 2] } }
+        ]
+      }
+    }
+  }
+]);
+
+/* RÉSULTAT ATTENDU : 3 avis (médiane)
+
+   ⚠️ Interprétation : La médiane à 3 signifie que 50% des logements
+   ont reçu 3 avis ou moins. Cela reflète une forte asymétrie :
+   de nombreux logements peu actifs, quelques uns très actifs (jusqu'à 3 067 avis).
+   La moyenne (non représentative) serait bien plus élevée à cause des outliers.
+*/
+
+// -------------------------------------------------------
+// B3. Médiane des avis par catégorie d'hôte (super hôte vs non super hôte)
+// -------------------------------------------------------
+// Méthode : on trie par catégorie + avis, puis on extrait la médiane par groupe.
+// Note : MongoDB <= 6 requiert un contournement avec $push + $arrayElemAt
+
+db.listings.aggregate([
+  {
+    $group: {
+      _id: "$host_is_superhost",
+      all_reviews: { $push: "$number_of_reviews" },
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      categorie: {
+        $cond: { if: { $eq: ["$_id", "t"] }, then: "Super hôte", else: "Hôte standard" }
+      },
+      count: 1,
+      median_reviews: {
+        $arrayElemAt: [
+          { $sortArray: { input: "$all_reviews", sortBy: 1 } },
+          { $floor: { $divide: ["$count", 2] } }
+        ]
+      }
+    }
+  },
+  {
+    $sort: { median_reviews: -1 }
+  }
+]);
+
+/* RÉSULTATS ATTENDUS :
+   Super hôte     : médiane = 24 avis
+   Hôte standard  : médiane =  2 avis
+
+   ⚠️ Interprétation clé : Les super hôtes ont 12x plus d'avis
+   en médiane → preuve d'une bien plus forte activité/qualité.
+   Le statut "super hôte" est corrélé à un nombre élevé de réservations.
+   Cela peut indiquer que ce sont des logements plus "commerciaux"
+   (gestion professionnelle) vs les hôtes occasionnels.
+*/
+
+// -------------------------------------------------------
+// B4. Densité de logements par quartier de Paris
+// -------------------------------------------------------
+// Explication : On compte le nombre de logements par neighbourhood_cleansed
+// et on calcule le pourcentage du total (95 885 documents).
+
+db.listings.aggregate([
+  {
+    $group: {
+      _id: "$neighbourhood_cleansed",
+      nombre_logements: { $sum: 1 }
+    }
+  },
+  {
+    $sort: { nombre_logements: -1 }
+  },
+  {
+    $project: {
+      _id: 0,
+      quartier: "$_id",
+      nombre_logements: 1,
+      pourcentage_total: {
+        $round: [
+          { $multiply: [{ $divide: ["$nombre_logements", 95885] }, 100] },
+          2
+        ]
+      }
+    }
+  }
+]);
+
+/* RÉSULTATS ATTENDUS (Top 10) :
+   Buttes-Montmartre    : 10 555 (11,0%)
+   Popincourt           :  8 430 ( 8,8%)
+   Vaugirard            :  7 802 ( 8,1%)
+   Batignolles-Monceau  :  6 857 ( 7,2%)
+   Entrepôt             :  6 558 ( 6,8%)
+   Passy                :  6 407 ( 6,7%)
+   Buttes-Chaumont      :  5 465 ( 5,7%)
+   Ménilmontant         :  5 271 ( 5,5%)
+   Opéra                :  4 570 ( 4,8%)
+   Reuilly              :  4 003 ( 4,2%)
+
+   ⚠️ Note : Buttes-Montmartre seul représente 11% du total.
+   Les quartiers Nord-Est et Est de Paris concentrent la majorité des annonces.
+*/
+
+// -------------------------------------------------------
+// B5. Quartiers avec le plus fort taux de réservation par mois
+// -------------------------------------------------------
+// Explication : Moyenne de reviews_per_month par quartier = proxy d'activité.
+// On filtre les quartiers avec au moins 50 annonces pour la fiabilité statistique.
+
+db.listings.aggregate([
+  {
+    $match: {
+      reviews_per_month: { $exists: true, $ne: null, $type: "number" },
+      neighbourhood_cleansed: { $exists: true, $ne: null }
+    }
+  },
+  {
+    $group: {
+      _id: "$neighbourhood_cleansed",
+      taux_moyen_mois: { $avg: "$reviews_per_month" },
+      nb_annonces: { $sum: 1 }
+    }
+  },
+  {
+    $match: { nb_annonces: { $gte: 50 } }   // filtre statistique
+  },
+  {
+    $sort: { taux_moyen_mois: -1 }
+  },
+  {
+    $limit: 10
+  },
+  {
+    $project: {
+      _id: 0,
+      quartier: "$_id",
+      taux_moyen_mois: { $round: ["$taux_moyen_mois", 3] },
+      nb_annonces: 1
+    }
+  }
+]);
+
+/* RÉSULTATS ATTENDUS (Top 10) :
+   Bourse            : 1.577 avis/mois
+   Louvre            : 1.384 avis/mois
+   Élysée            : 1.320 avis/mois
+   Temple            : 1.256 avis/mois
+   Hôtel-de-Ville    : 1.243 avis/mois
+   Palais-Bourbon    : 1.208 avis/mois
+   Vaugirard         : 1.197 avis/mois
+   Opéra             : 1.185 avis/mois
+   Entrepôt          : 1.180 avis/mois
+   Reuilly           : 1.175 avis/mois
+
+   ⚠️ Interprétation : Les quartiers du centre touristique (Bourse, Louvre,
+   Élysée, Hôtel-de-Ville) ont le plus fort taux d'activité. Corrélation
+   attendue avec la proximité des attractions touristiques et des JO 2024.
+*/
+
+// ============================================================
+// SECTION C — REQUÊTES BONUS / APPROFONDISSEMENT
+// ============================================================
+
+// C1. Distribution des prix (après nettoyage)
+// Note: le champ price peut contenir "$" et virgules → traitement Python recommandé
+db.listings.aggregate([
+  {
+    $match: { price: { $exists: true, $ne: null } }
+  },
+  {
+    $group: {
+      _id: null,
+      nb_avec_prix: { $sum: 1 }
+    }
+  }
+]);
+
+// C2. Logements sans aucun avis (potentiellement inactifs)
+db.listings.countDocuments({ number_of_reviews: 0 });
+/* RÉSULTAT : ~32 188 logements sans avis (33,6%) */
+
+// C3. Logements avec licence (conformité réglementaire)
+db.listings.countDocuments({ license: { $exists: true, $ne: null, $ne: "" } });
+
+// C4. Analyse par type de logement et super hôte
+db.listings.aggregate([
+  {
+    $group: {
+      _id: {
+        room_type: "$room_type",
+        is_superhost: "$host_is_superhost"
+      },
+      count: { $sum: 1 },
+      avg_reviews: { $avg: "$number_of_reviews" }
+    }
+  },
+  { $sort: { "_id.room_type": 1, "_id.is_superhost": -1 } },
+  {
+    $project: {
+      _id: 0,
+      type_logement: "$_id.room_type",
+      statut_hote: {
+        $cond: { if: { $eq: ["$_id.is_superhost", "t"] }, then: "Super hôte", else: "Standard" }
+      },
+      count: 1,
+      avg_reviews: { $round: ["$avg_reviews", 1] }
+    }
+  }
+]);
+
+// C5. Vérification de cohérence : doublons potentiels
+db.listings.aggregate([
+  {
+    $group: {
+      _id: "$id",
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $match: { count: { $gt: 1 } }
+  },
+  {
+    $count: "doublons"
+  }
+]);
+/* Si résultat = 0 : aucun doublon → données cohérentes ✅ */
+
+// C6. Index recommandés pour optimiser les performances
+db.listings.createIndex({ "neighbourhood_cleansed": 1 });
+db.listings.createIndex({ "room_type": 1 });
+db.listings.createIndex({ "host_is_superhost": 1 });
+db.listings.createIndex({ "instant_bookable": 1 });
+db.listings.createIndex({ "number_of_reviews": -1 });
+db.listings.createIndex({ "reviews_per_month": -1 });
+db.listings.createIndex({ "calculated_host_listings_count": -1 });
+db.listings.createIndex({ "host_id": 1 });
+// Index composé pour les requêtes BI les plus fréquentes
+db.listings.createIndex({ "neighbourhood_cleansed": 1, "room_type": 1, "reviews_per_month": -1 });
+
+// Pour vérifier les index créés :
+db.listings.getIndexes();
+
+// ============================================================
+// FIN DU SCRIPT
+// Association NosCités | Projet 7 | MongoDB Partie 2
+// ============================================================
+
+
+SOURCE : Script_Python_Polars_Partie2.py
+# ============================================================
+# PROJET 7 — NosCités | Partie 2 : Requêtes Complexes
+# Script Python — PyMongo + Polars
+# Association NosCités | Dataset: listings_Paris.csv
+# ============================================================
+# Installation des dépendances :
+#   pip install polars pymongo
+# ============================================================
+
+import polars as pl
+from pymongo import MongoClient
+
+# ============================================================
+# OPTION A : Depuis le CSV directement (sans MongoDB)
+# ============================================================
+
+print("=" * 60)
+print("ANALYSE DIRECTE DEPUIS LE CSV (Polars)")
+print("=" * 60)
+
+# Charger le CSV
+df = pl.read_csv("listings_Paris.csv", infer_schema_length=10000)
+print(f"✅ Dataset chargé : {len(df)} documents, {len(df.columns)} colonnes")
+
+# ── B1. Taux de réservation moyen par type de logement ──────
+print("\n── B1. Taux de réservation moyen par mois par type ──")
+taux_par_type = (
+    df
+    .filter(pl.col("reviews_per_month").is_not_null())
+    .group_by("room_type")
+    .agg([
+        pl.col("reviews_per_month").mean().alias("taux_moyen"),
+        pl.len().alias("nb_logements")
+    ])
+    .sort("taux_moyen", descending=True)
+)
+print(taux_par_type)
+
+# ── B2. Médiane des avis pour tous les logements ─────────────
+print("\n── B2. Médiane des avis pour tous les logements ──")
+mediane_globale = df["number_of_reviews"].median()
+print(f"Médiane globale : {mediane_globale}")
+print(f"Moyenne (pour comparaison) : {df['number_of_reviews'].mean():.1f}")
+print(f"Max : {df['number_of_reviews'].max()}")
+print(f"Sans avis (= 0) : {(df['number_of_reviews'] == 0).sum()} ({100*(df['number_of_reviews'] == 0).sum()/len(df):.1f}%)")
+
+# ── B3. Médiane des avis par catégorie d'hôte ────────────────
+print("\n── B3. Médiane des avis par catégorie d'hôte ──")
+mediane_par_hote = (
+    df
+    .group_by("host_is_superhost")
+    .agg([
+        pl.col("number_of_reviews").median().alias("mediane_avis"),
+        pl.col("number_of_reviews").mean().alias("moyenne_avis"),
+        pl.len().alias("nb_logements")
+    ])
+    .with_columns(
+        pl.when(pl.col("host_is_superhost") == "t")
+          .then(pl.lit("Super hôte"))
+          .otherwise(pl.lit("Hôte standard"))
+          .alias("categorie")
+    )
+    .sort("mediane_avis", descending=True)
+)
+print(mediane_par_hote.select(["categorie", "mediane_avis", "moyenne_avis", "nb_logements"]))
+
+# ── B4. Densité de logements par quartier ────────────────────
+print("\n── B4. Top 10 quartiers par densité ──")
+densite = (
+    df
+    .group_by("neighbourhood_cleansed")
+    .agg(pl.len().alias("nb_logements"))
+    .with_columns(
+        (pl.col("nb_logements") / len(df) * 100).round(2).alias("pct_total")
+    )
+    .sort("nb_logements", descending=True)
+    .head(10)
+)
+print(densite)
+
+# ── B5. Quartiers avec le plus fort taux de réservation ──────
+print("\n── B5. Top 10 quartiers par taux de réservation/mois ──")
+taux_quartier = (
+    df
+    .filter(pl.col("reviews_per_month").is_not_null())
+    .group_by("neighbourhood_cleansed")
+    .agg([
+        pl.col("reviews_per_month").mean().alias("taux_moyen"),
+        pl.len().alias("nb_annonces")
+    ])
+    .filter(pl.col("nb_annonces") >= 50)  # filtre statistique
+    .sort("taux_moyen", descending=True)
+    .head(10)
+)
+print(taux_quartier)
+
+# ── Bonus : Analyse complète ──────────────────────────────────
+print("\n── BONUS : Statistiques globales ──")
+print(f"Total annonces      : {len(df)}")
+print(f"Hôtes uniques       : {df['host_id'].n_unique()}")
+print(f"Super hôtes uniq.   : {df.filter(pl.col('host_is_superhost') == 't')['host_id'].n_unique()}")
+print(f"Réserv. instant.    : {(df['instant_bookable'] == 't').sum()} ({100*(df['instant_bookable'] == 't').sum()/len(df):.1f}%)")
+print(f"Avec disponibilité  : {(df['has_availability'] == 't').sum()}")
+
+# ============================================================
+# OPTION B : Depuis MongoDB avec PyMongo
+# ============================================================
+
+print("\n" + "=" * 60)
+print("CONNEXION MONGODB (PyMongo)")
+print("=" * 60)
+
+try:
+    client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=3000)
+    client.server_info()  # Test de connexion
+    db = client["noscites"]
+    collection = db["listings"]
+
+    print(f"✅ Connecté à MongoDB | Collection : {collection.count_documents({})} documents")
+
+    # Exemple de requête complexe via PyMongo
+    pipeline = [
+        {"$match": {"reviews_per_month": {"$type": "double"}}},
+        {"$group": {
+            "_id": "$neighbourhood_cleansed",
+            "taux_moyen": {"$avg": "$reviews_per_month"},
+            "nb": {"$sum": 1}
+        }},
+        {"$match": {"nb": {"$gte": 50}}},
+        {"$sort": {"taux_moyen": -1}},
+        {"$limit": 5}
+    ]
+
+    results = list(collection.aggregate(pipeline))
+    print("\nTop 5 quartiers (via MongoDB/PyMongo) :")
+    for r in results:
+        print(f"  {r['_id']}: {r['taux_moyen']:.3f} avis/mois ({r['nb']} annonces)")
+
+    client.close()
+
+except Exception as e:
+    print(f"⚠️  MongoDB non disponible (serveur local) : {e}")
+    print("   Utiliser l'Option A (CSV direct) pour les analyses.")
+
+print("\n✅ Script terminé avec succès.")
+print("Projet 7 — Association NosCités | Data Engineer | 2024")

@@ -1,0 +1,33 @@
+EXTRAITS DU NOTEBOOK ORIGINAL — RÉSULTATS CONSERVÉS
+Source : Elbousiydy_Hassna_1_notebooks_042026.ipynb
+Sélection du 16 novembre 2026. Pas de nouvelle exécution. Les métriques ci-dessous sont sur la cible log-transformée.
+
+Lignes supprimées (outliers de la target) : 34
+Lignes restantes : 1615
+
+[…]
+
+print("Shape de y :", y.shape)
+Shape de X : (1615, 13)
+Shape de y : (1615,)
+[…]
+
+print(f"Taille du jeu de test : {X_test.shape[0]} bâtiments")
+Taille du jeu de train : 1292 bâtiments
+Taille du jeu de test : 323 bâtiments
+[…]
+
+Taille du jeu de train : 1292 bâtiments
+Taille du jeu de test : 323 bâtiments
+
+[…]
+
+ --> Meilleurs paramètres : {'model__max_depth': None, 'model__min_samples_leaf': 1, 'model__min_samples_split': 10, 'model__n_estimators': 200}
+ --> Meilleur R² (cross-val) : 0.6959
+
+[…]
+
+   R² Train  MAE Train  RMSE Train  R² Test  MAE Test  RMSE Test
+0    0.9089     0.2725      0.3647   0.6922    0.4969     0.6817
+CELL 97 markdown
+[…]

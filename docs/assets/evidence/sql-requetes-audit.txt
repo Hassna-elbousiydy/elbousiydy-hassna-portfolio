@@ -1,0 +1,305 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : EL-BOUSIYDY_Hassna_1_SQL-Requetes_122025.sql
+USE supersmartmarket;
+SELECT DATABASE();
+
+CREATE TABLE clients (
+    customer_id VARCHAR(50) NOT NULL,
+    date_inscription DATE NOT NULL,
+    PRIMARY KEY (customer_id)
+);
+
+CREATE TABLE produits (
+    ean VARCHAR(100) NOT NULL,
+    libelle_produit TEXT NOT NULL,
+    categorie TEXT NOT NULL,
+    rayon TEXT NOT NULL,
+    prix REAL NOT NULL,
+    PRIMARY KEY (ean)
+);
+
+CREATE TABLE employe (
+    id_employe VARCHAR(50) NOT NULL,
+    pseudonyme TEXT NOT NULL,
+    nom TEXT NOT NULL,
+    prenom TEXT NOT NULL,
+    email TEXT NOT NULL,
+    date_debut DATE NOT NULL,
+    hash_mdp TEXT NOT NULL,
+    PRIMARY KEY (id_employe)
+);
+
+CREATE TABLE calendrier (
+    date_id INT NOT NULL,
+    jour INT NOT NULL,
+    mois INT NOT NULL,
+    mois_nom TEXT NOT NULL,
+    annee INT NOT NULL,
+    jour_semaine INT NOT NULL,
+    trimestre TEXT NOT NULL,
+    annee_mois INT NOT NULL,
+    PRIMARY KEY (date_id)
+);
+
+CREATE TABLE vente_detail (
+    id_bdd VARCHAR(50) NOT NULL,
+    id_ticket TEXT NOT NULL,
+    customer_id VARCHAR(50) NOT NULL,
+    ean VARCHAR(100) NOT NULL,
+    id_employe VARCHAR(50) NOT NULL,
+    date_achat INT NOT NULL,
+    PRIMARY KEY (id_bdd)
+);
+
+
+USE supersmartmarket;
+SHOW TABLES;
+
+SELECT COUNT(*) FROM clients;
+SELECT COUNT(*) FROM produits;
+SELECT COUNT(*) FROM employe;
+SELECT COUNT(*) FROM calendrier;
+SELECT COUNT(*) FROM vente_detail;
+---------------------------------------
+
+#### Chiffre d’affaires total du 14 août:
+SELECT
+    ROUND(SUM(p.prix), 2) AS chiffre_affaires_14_aout
+FROM vente_detail vd
+JOIN produits p
+    ON vd.ean = p.ean
+JOIN calendrier c
+    ON vd.date_achat = c.date_id
+WHERE c.jour = 14
+  AND c.mois = 8;
+
+#### Chiffre d’affaires par client – Top 10 clients
+SELECT
+    vd.customer_id,
+    ROUND(SUM(p.prix), 2) AS chiffre_affaires_client
+FROM vente_detail vd
+JOIN produits p
+    ON vd.ean = p.ean
+GROUP BY vd.customer_id
+ORDER BY chiffre_affaires_client DESC
+LIMIT 10;
+
+#### Part du chiffre d’affaires encaissé par employé
+
+SELECT
+    vd.id_employe,
+    ROUND(SUM(p.prix), 2) AS chiffre_affaires_employe,
+    ROUND(
+        SUM(p.prix) * 100.0 / (
+            SELECT SUM(p2.prix)
+            FROM vente_detail vd2
+            JOIN produits p2 ON vd2.ean = p2.ean
+        )
+    , 2) AS part_pourcentage
+FROM vente_detail vd
+JOIN produits p ON vd.ean = p.ean
+GROUP BY vd.id_employe
+ORDER BY chiffre_affaires_employe DESC;
+
+#### Vérification rapide de cohérence
+SELECT ROUND(SUM(prix), 2) FROM produits p
+JOIN vente_detail vd ON p.ean = vd.ean;
+
+
+
+
+######## Créer la table logs
+
+
+USE supersmartmarket;
+
+DROP TABLE IF EXISTS logs;
+
+CREATE TABLE logs (
+  log_id BIGINT NOT NULL AUTO_INCREMENT,
+  id_user VARCHAR(64) NOT NULL,
+  date_id INT NOT NULL,
+  action VARCHAR(10) NOT NULL,
+  table_insert VARCHAR(64) NOT NULL,
+  id_ligne VARCHAR(128) NOT NULL,
+  champs VARCHAR(128) NULL,
+  detail TEXT NULL,
+  PRIMARY KEY (log_id),
+  INDEX idx_logs_date_id (date_id),
+  INDEX idx_logs_table (table_insert),
+  INDEX idx_logs_action (action),
+  INDEX idx_logs_id_ligne (id_ligne)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+SELECT COUNT(*) FROM logs;
+
+SELECT action, COUNT(*)
+FROM logs
+GROUP BY action;
+
+SELECT table_insert, action, COUNT(*)
+FROM logs
+WHERE table_insert IN ('vente_detail','produits')
+GROUP BY table_insert, action;
+
+
+#### Vérifiez les types et les données insérées
+   # Nombre de lignes importées
+   SELECT COUNT(*) AS nb_logs FROM logs;
+   # Voir 20 logs (contrôle visuel)
+   SELECT * FROM logs ORDER BY log_id LIMIT 20;
+   # Valeurs distinctes (contrôle format)
+   SELECT action, COUNT(*) nb FROM logs GROUP BY action;
+   SELECT table_insert, COUNT(*) nb FROM logs GROUP BY table_insert ORDER BY nb DESC;
+   # Vérifier que date_id se lie à calendrier (logs_sans_calendrier doit être 0 ou très faible)
+	SELECT COUNT(*) AS logs_total,
+		SUM(c.date_id IS NULL) AS logs_sans_calendrier
+	FROM logs l
+	LEFT JOIN calendrier c ON c.date_id = l.date_id;
+
+#### Harmoniser les noms de tables dans les logs
+SELECT DISTINCT table_insert FROM logs;
+
+#### Vérifier ce que contiennent 'action' et 'table_insert'
+SELECT action, COUNT(*) AS nb
+FROM logs
+GROUP BY action
+ORDER BY nb DESC;
+
+SELECT table_insert, COUNT(*) AS nb
+FROM logs
+GROUP BY table_insert
+ORDER BY nb DESC;
+
+#### Normaliser les noms de tables (UPDATE) (ramener plusieurs écritures possibles à une seule valeur canonique)
+	# To Disable safe update mode (session-only)
+    SET SQL_SAFE_UPDATES = 0;
+	####
+
+UPDATE logs SET table_insert = 'clients'
+WHERE LOWER(table_insert) IN ('client', 'clients');
+
+UPDATE logs SET table_insert = 'produits'
+WHERE LOWER(table_insert) IN ('produit', 'produits');
+
+UPDATE logs SET table_insert = 'employe'
+WHERE LOWER(table_insert) IN ('employe', 'employés', 'employee', 'employees');
+
+UPDATE logs SET table_insert = 'calendrier'
+WHERE LOWER(table_insert) IN ('calendrier', 'calendar');
+
+UPDATE logs SET table_insert = 'vente_detail'
+WHERE LOWER(table_insert) IN ('vente', 'ventes', 'vente_detail', 'ventedetail', 'sale', 'sales');
+
+	# Recontrôle
+SELECT table_insert, COUNT(*) AS nb
+FROM logs
+GROUP BY table_insert
+ORDER BY nb DESC;
+
+#### Vérifier que 'date_id' est bien relié au calendrier
+
+SELECT
+  COUNT(*) AS logs_total,
+  SUM(c.date_id IS NULL) AS logs_sans_calendrier
+FROM logs l
+LEFT JOIN calendrier c ON c.date_id = l.date_id;
+
+########## Requêtes d’analyse ###########
+
+#### Trouver toutes les opérations qui peuvent changer le chiffre d’affaires
+SELECT table_insert, action, COUNT(*) AS nb
+FROM logs
+WHERE table_insert IN ('vente_detail', 'produits', 'calendrier')
+GROUP BY table_insert, action
+ORDER BY table_insert, action;
+# produits : UPDATE = nb = 575 → modification des prix => même si aucune vente n’est touchée “physiquement”
+# => la valorisation du CA change => Impact direct sur le CA!!!
+# vente_detail : INSERT = nb = 206885 → nouvelles ventes → CA augmente
+# => Impact direct et évident sur le CA
+
+#### Cibler uniquement le 14 août (toutes années confondues) (le 14 août = "jour = 14 et mois = 8")
+# On récupère les 'date_id' correspondants via la dimension calendrier, puis on filtre les logs dessus :
+SELECT
+  l.log_id,
+  l.date_id,
+  c.annee,
+  c.mois,
+  c.jour,
+  l.action,
+  l.table_insert,
+  l.id_ligne,
+  l.champs,
+  l.detail
+FROM logs l
+JOIN calendrier c ON c.date_id = l.date_id
+WHERE c.jour = 14
+  AND c.mois = 8
+  AND l.table_insert IN ('vente_detail', 'produits', 'calendrier')
+ORDER BY c.annee, l.log_id;
+
+# => Ça nous donne la liste complète des modifications enregistrées “au temps 14 août” (au sens clé temps).
+
+#### Prouver ce qui change le CA : modifications sur 'produits.prix'
+# Tous les UPDATE de prix (ou champs ressemblant au prix) :
+SELECT
+  l.log_id,
+  l.date_id,
+  l.action,
+  l.table_insert,
+  l.id_ligne AS ean_concerne,
+  l.champs,
+  l.detail
+FROM logs l
+WHERE l.table_insert = 'produits'
+  AND l.action = 'UPDATE'
+  AND LOWER(l.champs) IN ('prix', 'price', 'prix_unitaire', 'montant')
+ORDER BY l.log_id;
+# => “On a au moins un produit dont le prix a été modifié.”
+# => Donc si le CA est calculé à partir des prix actuels, le CA “recalculé”
+# peut changer par rapport à celui d’avant la modification.
+
+#### Prouver ce qui change le CA : INSERT/DELETE dans 'vente_detail'
+# les actions qui ajoutent/suppriment des lignes de vente :
+SELECT
+  l.log_id,
+  l.date_id,
+  l.action,
+  l.id_ligne AS id_vente_concernee,
+  l.champs,
+  l.detail
+FROM logs l
+WHERE l.table_insert = 'vente_detail'
+  AND l.action IN ('INSERT', 'DELETE')
+ORDER BY l.log_id;
+# => Ces logs permettent de “prouver” que le CA a changé parce que des ventes ont été ajoutées.
+
+#### Démontrer “instabilité” : comparaison CA avant/après
+# On ne peut pas recalculer “avant” sans historique complet,
+# On peut prouver qu’il y a des opérations de modification
+# et montrer qu’elles touchent les tables/colonnes qui alimentent le CA.
+
+SELECT
+  l.table_insert,
+  l.action,
+  COUNT(*) AS nb_operations
+FROM logs l
+WHERE l.table_insert IN ('vente_detail', 'produits')
+GROUP BY l.table_insert, l.action
+ORDER BY l.table_insert, l.action;
+
+# 1) Oui, il y a des opérations de modification dans le système : 575 mises à jour (UPDATE) sur la table produits.
+# => Donc les données “référentielles” produits
+# changent dans le temps (prix, catégorie, TVA, libellé, etc.).
+
+# 2) La table 'vente_detai'l est massivement alimentée : 206 885 insertions (INSERT).
+# => Le CA évolue en continu parce que de nouvelles ventes sont ajoutées.
+
+# 3) Pourquoi ça prouve l’“instabilité” du CA ?
+# Le CA est typiquement calculé à partir de vente_detail (quantités / lignes de vente)
+# et de produits (prix / informations produit) via jointure.
+# => Donc si produits est modifiée après coup, alors le CA recalculé “aujourd’hui” peut changer,
+# même pour des ventes passées (si le prix utilisé vient de produits et pas d’un prix figé dans vente_detail).
+# => C’est exactement l’idée d’“instabilité” attendue : les sources qui alimentent le CA ne sont pas figées.

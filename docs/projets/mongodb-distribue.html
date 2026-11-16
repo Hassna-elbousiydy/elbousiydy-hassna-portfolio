@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#F8F7F2"><meta name="description" content="Analyser des données Airbnb et expérimenter réplication, bascule et répartition par ville dans un laboratoire local."><meta property="og:type" content="article"><meta property="og:title" content="NosCités : explorer MongoDB distribué | Hassna El-Bousiydy"><meta property="og:description" content="Analyser des données Airbnb et expérimenter réplication, bascule et répartition par ville dans un laboratoire local."><meta property="og:image" content="../assets/img/mongodb-distribue.svg"><title>NosCités : explorer MongoDB distribué | Hassna El-Bousiydy</title><link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/css/styles.css"><script src="../assets/js/main.js" defer></script>
+</head>
+<body><a class="skip-link" href="#contenu">Aller au contenu</a>
+<header class="site-header">
+<div class="container header-row"><a class="logo" href="../index.html" aria-label="Hassna El-Bousiydy, accueil"><span class="logo-mark" aria-hidden="true">H</span> Hassna El-Bousiydy</a>
+<nav class="header-nav" aria-label="Navigation principale"><a href="../index.html#projets">Projets</a><a href="../index.html#expertises">Expertises</a><a href="../index.html#apropos">À propos</a><a class="nav-pill" href="../index.html#contact">Contact</a>
+</nav>
+</div>
+</header>
+<main id="contenu">
+<div class="case-hero">
+<div class="container">
+<div class="breadcrumbs"><a href="../index.html#projets">Projets</a><span aria-hidden="true">/</span><span>NosCités : explorer MongoDB distribué</span>
+</div><span class="eyebrow">NoSQL · Réplication · Sharding</span>
+<h1 class="serif">NosCités : explorer MongoDB distribué</h1>
+<p class="case-summary">Analyser des données Airbnb et expérimenter réplication, bascule et répartition par ville dans un laboratoire local.</p>
+<div class="case-tags"><span>MongoDB</span><span>Polars</span><span>Python</span><span>Power BI</span>
+</div>
+<p class="status-line">Projet de formation · Laboratoire local sur une seule machine</p>
+</div>
+</div>
+<div class="container case-container">
+<div class="case-layout">
+<article class="case-content">
+<figure class="flow-visual"><a href="../assets/img/mongodb-distribue.svg" aria-label="Ouvrir le schéma en grand"><img src="../assets/img/mongodb-distribue.svg" alt="Airbnb : Paris &amp; Lyon → MongoDB : Agrégations → Replica / shards : Architecture locale → Polars / BI : Analyse &amp; restitution" width="1100" height="400"></a>
+</figure>
+<p class="flow-caption">Schéma explicatif du périmètre décrit ; les environnements sont précisés dans l’étude.</p>
+<section class="case-section" id="probleme">
+<h2 class="serif">Le besoin et ma contribution</h2>
+<p>Organiser et analyser des annonces de deux villes, tout en explorant les mécanismes de distribution de MongoDB. J’ai écrit les agrégations, les traitements Polars et expérimenté réplication et sharding.</p>
+</section>
+<section class="case-section" id="architecture">
+<h2 class="serif">Deux axes d’expérimentation</h2>
+<ul>
+<li>Analyse : agrégations match/group/sort, calculs statistiques avec Polars et connexion de restitution Power BI.</li>
+<li>Architecture : replica set avec primaire, secondaire et arbitre ; exercice de bascule.</li>
+<li>Distribution : routeur mongos, configuration des shards Paris/Lyon et zones associées aux villes.</li>
+</ul>
+</section>
+<section class="case-section" id="decisions">
+<h2 class="serif">Relier clés et accès aux données</h2>
+<p>Le choix d’une clé de répartition doit être lu avec les requêtes attendues. Les zones et l’analyse des plans d’exécution permettent d’expliquer le ciblage d’une requête plutôt que de supposer qu’un cluster est automatiquement plus rapide.</p>
+</section>
+<section class="case-section" id="resultats">
+<h2 class="serif">Des preuves de mécanismes</h2>
+<p>Les livrables contiennent scripts d’agrégation, traitements Polars et captures de configuration/bascule. La présentation montre l’expérimentation des mécanismes ; elle ne constitue pas un benchmark comparatif de disponibilité.</p>
+</section>
+<section class="case-section" id="limites">
+<h2 class="serif">Un laboratoire, pas un SLA</h2>
+<p>Tous les composants tournent sur une seule machine : cette configuration ne protège pas contre sa panne. Aucune garantie de disponibilité ni de délai de bascule n’est avancée. La fréquence des avis reste un indicateur indirect et ne mesure pas l’occupation réelle ni un effet causal des Jeux olympiques.</p>
+</section>
+<section class="case-section" id="preuves">
+<h2 class="serif">Code et éléments de preuve</h2>
+<p>Les extraits et résultats ci-dessous proviennent des livrables du projet, consultés le 16 novembre 2026. Les traitements n’ont pas été réexécutés pour cette présentation.</p>
+<ul class="evidence-list">
+<li><a class="text-link" href="../assets/evidence/nos-cites-requetes.txt">Requêtes MongoDB et traitements Polars d’origine</a>
+</li>
+</ul>
+</section>
+</article>
+<aside class="case-sidebar" aria-label="Sommaire de l’étude">
+<h3>Dans cette étude</h3><a href="#probleme">Le besoin et ma contribution</a><a href="#architecture">Deux axes d’expérimentation</a><a href="#decisions">Relier clés et accès aux données</a><a href="#resultats">Des preuves de mécanismes</a><a href="#limites">Un laboratoire, pas un SLA</a><a href="#preuves">Code et preuves</a><a class="sidebar-back" href="../index.html#projets">← Tous les projets</a>
+</aside>
+</div>
+<div class="case-back"><a class="text-link" href="../index.html#projets">← Explorer les autres projets</a>
+</div>
+</div>
+</main>
+<footer class="site-footer">
+<div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering & Applied AI</span>
+<div class="footer-links"><a href="../index.html#projets">Tous les projets</a><a href="mailto:722msbv09@mozmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" target="_blank" rel="noopener noreferrer">GitHub</a><a href="../mentions-legales.html">Mentions légales</a>
+</div>
+</div>
+</footer>
+</body>
+</html>

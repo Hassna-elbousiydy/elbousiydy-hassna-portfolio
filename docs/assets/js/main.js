@@ -9,12 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function applyFilter(value) {
     let visible = 0;
     cards.forEach(card => {
-      const matching = value === 'all' || card.dataset.category === value;
+      const matching = value === 'all' || card.dataset.category.split(/\s+/).includes(value);
       card.hidden = !matching;
       if (matching) visible++;
     });
     filters.forEach(button => {
       button.setAttribute('aria-pressed', String(button.dataset.filter === value));
+    });
+    document.querySelectorAll('[data-project-group]').forEach(group => {
+      group.hidden = !Array.from(group.querySelectorAll('[data-category]')).some(card => !card.hidden);
     });
     if (resultMessage) {
       resultMessage.textContent = visible + ' projet' + (visible > 1 ? 's' : '') + ' affiché' + (visible > 1 ? 's' : '') + '.';

@@ -1,0 +1,2357 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : Workflow.yaml
+id: bottleneck_workflow
+
+namespace: bottleneck.automatisation
+
+
+
+description: >
+
+  Automatisation BottleNeck : conversion des sources, nettoyage,
+
+  dedoublonnage, reconciliation ERP/CMS, calcul du chiffre d'affaires,
+
+  segmentation des vins par z-score, tests de qualite, extractions
+
+  et planification mensuelle.
+
+
+
+tasks:
+
+
+
+  # ============================================================
+
+  # 1. LECTURE DES EXCEL + VALIDATION + CONVERSION CSV
+
+  # ============================================================
+
+
+
+  - id: convert_sources_to_csv
+
+    type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+    taskRunner:
+
+      type: io.kestra.plugin.core.runner.Process
+
+
+
+    commands:
+
+      - |
+
+        /usr/bin/python3 - <<'PY'
+
+        import pandas as pd
+
+        import sys
+
+
+
+        print("=== Lecture des sources BottleNeck ===")
+
+
+
+        erp = pd.read_excel("/data/Fichier_erp.xlsx")
+
+        liaison = pd.read_excel("/data/fichier_liaison.xlsx")
+
+        web = pd.read_excel("/data/Fichier_web.xlsx")
+
+
+
+        # --------------------------------------------------------
+
+        # Controle du schema pour detecter une nouvelle source
+
+        # incompatible avant de lancer les traitements
+
+        # --------------------------------------------------------
+
+
+
+        required_erp = {
+
+            "product_id",
+
+            "onsale_web",
+
+            "price",
+
+            "stock_quantity",
+
+            "stock_status"
+
+        }
+
+
+
+        required_liaison = {
+
+            "product_id",
+
+            "id_web"
+
+        }
+
+
+
+        required_web = {
+
+            "sku",
+
+            "total_sales",
+
+            "post_title",
+
+            "post_name",
+
+            "post_type"
+
+        }
+
+
+
+        missing = []
+
+
+
+        if not required_erp.issubset(erp.columns):
+
+            missing.append(
+
+                "ERP colonnes manquantes : "
+
+                + str(sorted(required_erp - set(erp.columns)))
+
+            )
+
+
+
+        if not required_liaison.issubset(liaison.columns):
+
+            missing.append(
+
+                "Liaison colonnes manquantes : "
+
+                + str(sorted(required_liaison - set(liaison.columns)))
+
+            )
+
+
+
+        if not required_web.issubset(web.columns):
+
+            missing.append(
+
+                "WEB colonnes manquantes : "
+
+                + str(sorted(required_web - set(web.columns)))
+
+            )
+
+
+
+        if missing:
+
+            print("ECHEC VALIDATION DES SOURCES")
+
+
+
+            for message in missing:
+
+                print("-", message)
+
+
+
+            sys.exit(1)
+
+
+
+        # --------------------------------------------------------
+
+        # Normalisation des cles
+
+        # --------------------------------------------------------
+
+
+
+        def normaliser_cle(serie, prefixe):
+
+            s = serie.astype("string")
+
+            s = s.str.strip()
+
+            s = s.str.lower()
+
+            s = s.str.replace(
+
+                r"\.0$",
+
+                "",
+
+                regex=True
+
+            )
+
+
+
+            s = s.replace({
+
+                "": pd.NA,
+
+                "nan": pd.NA,
+
+                "<na>": pd.NA,
+
+                "none": pd.NA
+
+            })
+
+
+
+            return s.apply(
+
+                lambda x:
+
+                prefixe + x
+
+                if pd.notna(x)
+
+                else pd.NA
+
+            )
+
+
+
+        # ERP <-> Liaison
+
+        erp["product_key"] = normaliser_cle(
+
+            erp["product_id"],
+
+            "p_"
+
+        )
+
+
+
+        liaison["product_key"] = normaliser_cle(
+
+            liaison["product_id"],
+
+            "p_"
+
+        )
+
+
+
+        # Liaison <-> Web
+
+        liaison["web_key"] = normaliser_cle(
+
+            liaison["id_web"],
+
+            "w_"
+
+        )
+
+
+
+        web["web_key"] = normaliser_cle(
+
+            web["sku"],
+
+            "w_"
+
+        )
+
+
+
+        print(
+
+            f"ERP brut : {len(erp)} lignes"
+
+        )
+
+
+
+        print(
+
+            f"Liaison brute : {len(liaison)} lignes"
+
+        )
+
+
+
+        print(
+
+            f"WEB brut : {len(web)} lignes"
+
+        )
+
+
+
+        erp.to_csv(
+
+            "erp_raw.csv",
+
+            index=False
+
+        )
+
+
+
+        liaison.to_csv(
+
+            "liaison_raw.csv",
+
+            index=False
+
+        )
+
+
+
+        web.to_csv(
+
+            "web_raw.csv",
+
+            index=False
+
+        )
+
+
+
+        print(
+
+            "Sources validees."
+
+        )
+
+
+
+        print(
+
+            "Conversion Excel -> CSV terminee."
+
+        )
+
+        PY
+
+
+
+    outputFiles:
+
+      - "erp_raw.csv"
+
+      - "liaison_raw.csv"
+
+      - "web_raw.csv"
+
+
+
+
+
+  # ============================================================
+
+  # 2. SUPPRESSION DES VALEURS MANQUANTES WEB
+
+  #    DUCKDB / SQL
+
+  # ============================================================
+
+
+
+  - id: clean_web_missing_values
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      web_raw.csv: "{{ outputs.convert_sources_to_csv.outputFiles['web_raw.csv'] }}"
+
+
+
+    sql: |
+
+      SELECT *
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/web_raw.csv',
+
+        header = true
+
+      )
+
+      WHERE sku IS NOT NULL
+
+        AND trim(CAST(sku AS VARCHAR)) <> '';
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 3. EXPORT WEB NETTOYE EN CSV
+
+  # ============================================================
+
+
+
+  - id: export_web_clean
+
+    type: io.kestra.plugin.serdes.csv.IonToCsv
+
+
+
+    from: "{{ outputs.clean_web_missing_values.uri }}"
+
+
+
+
+
+  # ============================================================
+
+  # 4. DEDOUBLONNAGE WEB
+
+  #    DUCKDB / SQL
+
+  # ============================================================
+
+
+
+  - id: deduplicate_web
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      web_raw.csv: "{{ outputs.convert_sources_to_csv.outputFiles['web_raw.csv'] }}"
+
+
+
+    sql: |
+
+      SELECT *
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/web_raw.csv',
+
+        header = true
+
+      )
+
+      WHERE web_key IS NOT NULL
+
+        AND trim(CAST(web_key AS VARCHAR)) <> ''
+
+
+
+      QUALIFY ROW_NUMBER() OVER (
+
+        PARTITION BY web_key
+
+        ORDER BY
+
+          CASE
+
+            WHEN post_type = 'product'
+
+            THEN 0
+
+            ELSE 1
+
+          END
+
+      ) = 1;
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 5. EXPORT WEB DEDOUBLONNE
+
+  # ============================================================
+
+
+
+  - id: export_web_deduplicated
+
+    type: io.kestra.plugin.serdes.csv.IonToCsv
+
+
+
+    from: "{{ outputs.deduplicate_web.uri }}"
+
+
+
+
+
+  # ============================================================
+
+  # 6. DEDOUBLONNAGE ERP
+
+  #    DUCKDB / SQL
+
+  # ============================================================
+
+
+
+  - id: deduplicate_erp
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      erp_raw.csv: "{{ outputs.convert_sources_to_csv.outputFiles['erp_raw.csv'] }}"
+
+
+
+    sql: |
+
+      SELECT *
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/erp_raw.csv',
+
+        header = true
+
+      )
+
+
+
+      QUALIFY ROW_NUMBER() OVER (
+
+        PARTITION BY product_key
+
+        ORDER BY product_id
+
+      ) = 1;
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 7. EXPORT ERP DEDOUBLONNE
+
+  # ============================================================
+
+
+
+  - id: export_erp_deduplicated
+
+    type: io.kestra.plugin.serdes.csv.IonToCsv
+
+
+
+    from: "{{ outputs.deduplicate_erp.uri }}"
+
+
+
+
+
+  # ============================================================
+
+  # 8. DEDOUBLONNAGE LIAISON
+
+  #    DUCKDB / SQL
+
+  # ============================================================
+
+
+
+  - id: deduplicate_liaison
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      liaison_raw.csv: "{{ outputs.convert_sources_to_csv.outputFiles['liaison_raw.csv'] }}"
+
+
+
+    sql: |
+
+      SELECT *
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/liaison_raw.csv',
+
+        header = true
+
+      )
+
+
+
+      WHERE product_key IS NOT NULL
+
+
+
+      QUALIFY ROW_NUMBER() OVER (
+
+        PARTITION BY product_key
+
+        ORDER BY product_id
+
+      ) = 1;
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 9. EXPORT LIAISON DEDOUBLONNEE
+
+  # ============================================================
+
+
+
+  - id: export_liaison_deduplicated
+
+    type: io.kestra.plugin.serdes.csv.IonToCsv
+
+
+
+    from: "{{ outputs.deduplicate_liaison.uri }}"
+
+
+
+
+
+  # ============================================================
+
+  # 10. TESTS SOURCES
+
+  #
+
+  # Couvre :
+
+  # - absence de doublons
+
+  # - absence de valeurs manquantes
+
+  # - volumes de reference
+
+  # ============================================================
+
+
+
+  - id: test_sources
+
+    type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+    taskRunner:
+
+      type: io.kestra.plugin.core.runner.Process
+
+
+
+    inputFiles:
+
+      erp.csv: "{{ outputs.export_erp_deduplicated.uri }}"
+
+      liaison.csv: "{{ outputs.export_liaison_deduplicated.uri }}"
+
+      web_clean.csv: "{{ outputs.export_web_clean.uri }}"
+
+      web_dedup.csv: "{{ outputs.export_web_deduplicated.uri }}"
+
+
+
+    commands:
+
+      - |
+
+        /usr/bin/python3 - <<'PY'
+
+        import pandas as pd
+
+        import sys
+
+
+
+        erp = pd.read_csv(
+
+            "{{ workingDir }}/erp.csv"
+
+        )
+
+
+
+        liaison = pd.read_csv(
+
+            "{{ workingDir }}/liaison.csv"
+
+        )
+
+
+
+        web_clean = pd.read_csv(
+
+            "{{ workingDir }}/web_clean.csv"
+
+        )
+
+
+
+        web_dedup = pd.read_csv(
+
+            "{{ workingDir }}/web_dedup.csv"
+
+        )
+
+
+
+        errors = []
+
+
+
+        # --------------------------------------------------------
+
+        # Volumes attendus
+
+        # --------------------------------------------------------
+
+
+
+        if len(erp) != 825:
+
+            errors.append(
+
+                f"ERP : {len(erp)} lignes, "
+
+                "825 attendues"
+
+            )
+
+
+
+        if len(liaison) != 825:
+
+            errors.append(
+
+                f"Liaison : {len(liaison)} lignes, "
+
+                "825 attendues"
+
+            )
+
+
+
+        if len(web_clean) != 1428:
+
+            errors.append(
+
+                f"WEB nettoye : {len(web_clean)} lignes, "
+
+                "1428 attendues"
+
+            )
+
+
+
+        if len(web_dedup) != 714:
+
+            errors.append(
+
+                f"WEB dedoublonne : {len(web_dedup)} lignes, "
+
+                "714 attendues"
+
+            )
+
+
+
+        # --------------------------------------------------------
+
+        # Absence de valeurs manquantes critiques
+
+        # --------------------------------------------------------
+
+
+
+        if erp["product_key"].isna().any():
+
+            errors.append(
+
+                "ERP : product_key manquante"
+
+            )
+
+
+
+        if erp["price"].isna().any():
+
+            errors.append(
+
+                "ERP : price manquant"
+
+            )
+
+
+
+        if liaison["product_key"].isna().any():
+
+            errors.append(
+
+                "Liaison : product_key manquante"
+
+            )
+
+
+
+        # id_web peut etre NULL pour un produit
+
+        # non publie sur le site : ce n'est pas
+
+        # considere ici comme une erreur.
+
+
+
+        if web_clean["web_key"].isna().any():
+
+            errors.append(
+
+                "WEB nettoye : web_key manquante"
+
+            )
+
+
+
+        if web_dedup["web_key"].isna().any():
+
+            errors.append(
+
+                "WEB dedoublonne : web_key manquante"
+
+            )
+
+
+
+        # --------------------------------------------------------
+
+        # Absence de doublons
+
+        # --------------------------------------------------------
+
+
+
+        if erp["product_key"].duplicated().any():
+
+            errors.append(
+
+                "ERP : doublons sur product_key"
+
+            )
+
+
+
+        if liaison["product_key"].duplicated().any():
+
+            errors.append(
+
+                "Liaison : doublons sur product_key"
+
+            )
+
+
+
+        if web_dedup["web_key"].duplicated().any():
+
+            errors.append(
+
+                "WEB : doublons sur web_key "
+
+                "apres dedoublonnage"
+
+            )
+
+
+
+        # --------------------------------------------------------
+
+        # Resultat
+
+        # --------------------------------------------------------
+
+
+
+        if errors:
+
+            print(
+
+                "ECHEC TESTS SOURCES"
+
+            )
+
+
+
+            for error in errors:
+
+                print("-", error)
+
+
+
+            sys.exit(1)
+
+
+
+        print(
+
+            "TEST SOURCES OK"
+
+        )
+
+
+
+        print(
+
+            "ERP = 825 lignes"
+
+        )
+
+
+
+        print(
+
+            "Liaison = 825 lignes"
+
+        )
+
+
+
+        print(
+
+            "WEB nettoye = 1428 lignes"
+
+        )
+
+
+
+        print(
+
+            "WEB dedoublonne = 714 lignes"
+
+        )
+
+
+
+        print(
+
+            "Aucun doublon sur les cles."
+
+        )
+
+
+
+        print(
+
+            "Aucune valeur manquante critique."
+
+        )
+
+        PY
+
+
+
+
+
+  # ============================================================
+
+  # 11. FUSION DES DEUX SYSTEMES
+
+  #     ERP + LIAISON + WEB
+
+  #     DUCKDB / SQL
+
+  # ============================================================
+
+
+
+  - id: merge_systems
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      erp.csv: "{{ outputs.export_erp_deduplicated.uri }}"
+
+      liaison.csv: "{{ outputs.export_liaison_deduplicated.uri }}"
+
+      web.csv: "{{ outputs.export_web_deduplicated.uri }}"
+
+
+
+    sql: |
+
+      SELECT
+
+        CAST(e.product_id AS INTEGER)
+
+          AS product_id,
+
+
+
+        CAST(e.onsale_web AS INTEGER)
+
+          AS onsale_web,
+
+
+
+        CAST(e.price AS DOUBLE)
+
+          AS price,
+
+
+
+        CAST(e.stock_quantity AS INTEGER)
+
+          AS stock_quantity,
+
+
+
+        e.stock_status,
+
+
+
+        l.id_web,
+
+
+
+        w.sku,
+
+
+
+        CAST(w.total_sales AS DOUBLE)
+
+          AS total_sales,
+
+
+
+        w.post_title,
+
+        w.post_name,
+
+        w.post_type
+
+
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/erp.csv',
+
+        header = true
+
+      ) e
+
+
+
+      INNER JOIN read_csv_auto(
+
+        '{{ workingDir }}/liaison.csv',
+
+        header = true
+
+      ) l
+
+        ON e.product_key = l.product_key
+
+
+
+      INNER JOIN read_csv_auto(
+
+        '{{ workingDir }}/web.csv',
+
+        header = true
+
+      ) w
+
+        ON l.web_key = w.web_key;
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 12. EXPORT DE LA FUSION
+
+  # ============================================================
+
+
+
+  - id: export_merged_csv
+
+    type: io.kestra.plugin.serdes.csv.IonToCsv
+
+
+
+    from: "{{ outputs.merge_systems.uri }}"
+
+
+
+
+
+  # ============================================================
+
+  # 13. TEST DE COHERENCE DES JOINTURES
+
+  # ============================================================
+
+
+
+  - id: test_join
+
+    type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+    taskRunner:
+
+      type: io.kestra.plugin.core.runner.Process
+
+
+
+    inputFiles:
+
+      merged.csv: "{{ outputs.export_merged_csv.uri }}"
+
+
+
+    commands:
+
+      - |
+
+        /usr/bin/python3 - <<'PY'
+
+        import pandas as pd
+
+        import sys
+
+
+
+        merged = pd.read_csv(
+
+            "{{ workingDir }}/merged.csv"
+
+        )
+
+
+
+        errors = []
+
+
+
+        if len(merged) != 714:
+
+            errors.append(
+
+                f"Fusion : {len(merged)} lignes, "
+
+                "714 attendues"
+
+            )
+
+
+
+        if merged["product_id"].isna().any():
+
+            errors.append(
+
+                "Fusion : product_id manquant"
+
+            )
+
+
+
+        if merged["sku"].isna().any():
+
+            errors.append(
+
+                "Fusion : sku manquant"
+
+            )
+
+
+
+        if merged["product_id"].duplicated().any():
+
+            errors.append(
+
+                "Fusion : product_id duplique"
+
+            )
+
+
+
+        if errors:
+
+            print(
+
+                "ECHEC TEST JOINTURE"
+
+            )
+
+
+
+            for error in errors:
+
+                print("-", error)
+
+
+
+            sys.exit(1)
+
+
+
+        print(
+
+            "TEST JOINTURE OK : "
+
+            "714 lignes, cles coherentes, "
+
+            "aucun doublon."
+
+        )
+
+        PY
+
+
+
+
+
+  # ============================================================
+
+  # 14. CONTROLE VISIBLE DU NOMBRE DE LIGNES
+
+  # ============================================================
+
+
+
+  - id: check_merged_count
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      merged.csv: "{{ outputs.export_merged_csv.uri }}"
+
+
+
+    sql: |
+
+      SELECT
+
+        COUNT(*) AS nombre_lignes
+
+
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/merged.csv',
+
+        header = true
+
+      );
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 15. CA PAR PRODUIT
+
+  #     DUCKDB / SQL
+
+  # ============================================================
+
+
+
+  - id: calculate_revenue_products
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      merged.csv: "{{ outputs.export_merged_csv.uri }}"
+
+
+
+    sql: |
+
+      SELECT
+
+        product_id,
+
+        sku,
+
+        post_title,
+
+
+
+        CAST(price AS DOUBLE)
+
+          AS price,
+
+
+
+        CAST(total_sales AS DOUBLE)
+
+          AS total_sales,
+
+
+
+        ROUND(
+
+          CAST(price AS DOUBLE)
+
+          * CAST(total_sales AS DOUBLE),
+
+          2
+
+        ) AS chiffre_affaires_produit
+
+
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/merged.csv',
+
+        header = true
+
+      )
+
+
+
+      ORDER BY
+
+        chiffre_affaires_produit DESC;
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 16. CA GLOBAL
+
+  #     DUCKDB / SQL
+
+  # ============================================================
+
+
+
+  - id: calculate_revenue_total
+
+    type: io.kestra.plugin.jdbc.duckdb.Query
+
+
+
+    inputFiles:
+
+      merged.csv: "{{ outputs.export_merged_csv.uri }}"
+
+
+
+    sql: |
+
+      SELECT
+
+        ROUND(
+
+          SUM(
+
+            CAST(price AS DOUBLE)
+
+            * CAST(total_sales AS DOUBLE)
+
+          ),
+
+          2
+
+        ) AS chiffre_affaires_global
+
+
+
+      FROM read_csv_auto(
+
+        '{{ workingDir }}/merged.csv',
+
+        header = true
+
+      );
+
+
+
+    store: true
+
+
+
+    retry:
+
+      type: constant
+
+      maxAttempts: 3
+
+      interval: PT30S
+
+
+
+
+
+  # ============================================================
+
+  # 17. EXPORTS CA EN CSV
+
+  # ============================================================
+
+
+
+  - id: export_revenue_products_csv
+
+    type: io.kestra.plugin.serdes.csv.IonToCsv
+
+
+
+    from: "{{ outputs.calculate_revenue_products.uri }}"
+
+
+
+
+
+  - id: export_revenue_total_csv
+
+    type: io.kestra.plugin.serdes.csv.IonToCsv
+
+
+
+    from: "{{ outputs.calculate_revenue_total.uri }}"
+
+
+
+
+
+  # ============================================================
+
+  # 18. TEST DE COHERENCE DU CHIFFRE D'AFFAIRES
+
+  # ============================================================
+
+
+
+  - id: test_revenue
+
+    type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+    taskRunner:
+
+      type: io.kestra.plugin.core.runner.Process
+
+
+
+    inputFiles:
+
+      ca_total.csv: "{{ outputs.export_revenue_total_csv.uri }}"
+
+
+
+    commands:
+
+      - |
+
+        /usr/bin/python3 - <<'PY'
+
+        import pandas as pd
+
+        import sys
+
+
+
+        df = pd.read_csv(
+
+            "{{ workingDir }}/ca_total.csv"
+
+        )
+
+
+
+        valeur = round(
+
+            float(
+
+                df[
+
+                    "chiffre_affaires_global"
+
+                ].iloc[0]
+
+            ),
+
+            2
+
+        )
+
+
+
+        attendu = 70568.60
+
+
+
+        if abs(
+
+            valeur - attendu
+
+        ) > 0.01:
+
+
+
+            print(
+
+                f"ECHEC TEST CA : "
+
+                f"{valeur:.2f} EUR obtenus, "
+
+                f"{attendu:.2f} EUR attendus"
+
+            )
+
+
+
+            sys.exit(1)
+
+
+
+        print(
+
+            f"TEST CHIFFRE D'AFFAIRES OK : "
+
+            f"{valeur:.2f} EUR"
+
+        )
+
+        PY
+
+
+
+
+
+  # ============================================================
+
+  # 19. RAPPORT EXCEL
+
+  #     - CA par produit
+
+  #     - CA total
+
+  # ============================================================
+
+
+
+  - id: build_revenue_excel
+
+    type: io.kestra.plugin.serdes.excel.IonToExcel
+
+
+
+    from:
+
+      CA_par_produit: "{{ outputs.calculate_revenue_products.uri }}"
+
+      CA_total: "{{ outputs.calculate_revenue_total.uri }}"
+
+
+
+
+
+  # ============================================================
+
+  # 20. CALCUL DU Z-SCORE
+
+  #
+
+  # z = (prix - moyenne) / ecart-type
+
+  # premium / millesime si z > 2
+
+  # ============================================================
+
+
+
+  - id: compute_zscore
+
+    type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+    taskRunner:
+
+      type: io.kestra.plugin.core.runner.Process
+
+
+
+    inputFiles:
+
+      merged.csv: "{{ outputs.export_merged_csv.uri }}"
+
+
+
+    commands:
+
+      - |
+
+        /usr/bin/python3 - <<'PY'
+
+        import pandas as pd
+
+
+
+        df = pd.read_csv(
+
+            "{{ workingDir }}/merged.csv"
+
+        )
+
+
+
+        df["price"] = pd.to_numeric(
+
+            df["price"],
+
+            errors="coerce"
+
+        )
+
+
+
+        moyenne = df["price"].mean()
+
+
+
+        ecart_type = df["price"].std()
+
+
+
+        df["zscore"] = (
+
+            df["price"] - moyenne
+
+        ) / ecart_type
+
+
+
+        df["categorie"] = (
+
+            df["zscore"]
+
+            .apply(
+
+                lambda z:
+
+                "premium"
+
+                if z > 2
+
+                else "ordinaire"
+
+            )
+
+        )
+
+
+
+        df.to_csv(
+
+            "zscore.csv",
+
+            index=False
+
+        )
+
+
+
+        nb_premium = int(
+
+            (
+
+                df["zscore"] > 2
+
+            ).sum()
+
+        )
+
+
+
+        nb_ordinaires = int(
+
+            (
+
+                df["zscore"] <= 2
+
+            ).sum()
+
+        )
+
+
+
+        print(
+
+            f"Prix moyen : "
+
+            f"{moyenne:.2f} EUR"
+
+        )
+
+
+
+        print(
+
+            f"Ecart-type : "
+
+            f"{ecart_type:.2f} EUR"
+
+        )
+
+
+
+        print(
+
+            "Vins premium / millesimes "
+
+            f"(z-score > 2) : "
+
+            f"{nb_premium}"
+
+        )
+
+
+
+        print(
+
+            f"Vins ordinaires : "
+
+            f"{nb_ordinaires}"
+
+        )
+
+        PY
+
+
+
+    outputFiles:
+
+      - "zscore.csv"
+
+
+
+
+
+  # ============================================================
+
+  # 21. TEST DU Z-SCORE
+
+  # ============================================================
+
+
+
+  - id: test_zscore
+
+    type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+    taskRunner:
+
+      type: io.kestra.plugin.core.runner.Process
+
+
+
+    inputFiles:
+
+      zscore.csv: "{{ outputs.compute_zscore.outputFiles['zscore.csv'] }}"
+
+
+
+    commands:
+
+      - |
+
+        /usr/bin/python3 - <<'PY'
+
+        import pandas as pd
+
+        import sys
+
+
+
+        df = pd.read_csv(
+
+            "{{ workingDir }}/zscore.csv"
+
+        )
+
+
+
+        nb_premium = int(
+
+            (
+
+                df["zscore"] > 2
+
+            ).sum()
+
+        )
+
+
+
+        nb_ordinaires = int(
+
+            (
+
+                df["zscore"] <= 2
+
+            ).sum()
+
+        )
+
+
+
+        if nb_premium != 30:
+
+
+
+            print(
+
+                "ECHEC TEST Z-SCORE : "
+
+                f"{nb_premium} premium, "
+
+                "30 attendus"
+
+            )
+
+
+
+            sys.exit(1)
+
+
+
+        if (
+
+            nb_premium
+
+            + nb_ordinaires
+
+        ) != 714:
+
+
+
+            print(
+
+                "ECHEC TEST Z-SCORE : "
+
+                "total different de 714"
+
+            )
+
+
+
+            sys.exit(1)
+
+
+
+        print(
+
+            "TEST Z-SCORE OK"
+
+        )
+
+
+
+        print(
+
+            f"Premium / millesimes : "
+
+            f"{nb_premium}"
+
+        )
+
+
+
+        print(
+
+            f"Ordinaires : "
+
+            f"{nb_ordinaires}"
+
+        )
+
+
+
+        print(
+
+            "Total : 714"
+
+        )
+
+        PY
+
+
+
+
+
+  # ============================================================
+
+  # 22. BRANCHES PREMIUM / ORDINAIRES
+
+  # ============================================================
+
+
+
+  - id: branch_extract_wines
+
+    type: io.kestra.plugin.core.flow.Parallel
+
+
+
+    tasks:
+
+
+
+      # ---------------------------------------------------------
+
+      # BRANCHE PREMIUM
+
+      # ---------------------------------------------------------
+
+
+
+      - id: extract_premium
+
+        type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+        taskRunner:
+
+          type: io.kestra.plugin.core.runner.Process
+
+
+
+        inputFiles:
+
+          zscore.csv: "{{ outputs.compute_zscore.outputFiles['zscore.csv'] }}"
+
+
+
+        commands:
+
+          - |
+
+            /usr/bin/python3 - <<'PY'
+
+            import pandas as pd
+
+            import sys
+
+
+
+            df = pd.read_csv(
+
+                "{{ workingDir }}/zscore.csv"
+
+            )
+
+
+
+            premium = df[
+
+                df["zscore"] > 2
+
+            ].copy()
+
+
+
+            if len(premium) != 30:
+
+
+
+                print(
+
+                    "ECHEC EXTRACTION PREMIUM : "
+
+                    f"{len(premium)} lignes, "
+
+                    "30 attendues"
+
+                )
+
+
+
+                sys.exit(1)
+
+
+
+            premium.to_csv(
+
+                "vins_premium.csv",
+
+                index=False
+
+            )
+
+
+
+            print(
+
+                "Vins premium exportes : "
+
+                f"{len(premium)}"
+
+            )
+
+            PY
+
+
+
+        outputFiles:
+
+          - "vins_premium.csv"
+
+
+
+
+
+      # ---------------------------------------------------------
+
+      # BRANCHE ORDINAIRES
+
+      # ---------------------------------------------------------
+
+
+
+      - id: extract_ordinaires
+
+        type: io.kestra.plugin.scripts.shell.Commands
+
+
+
+        taskRunner:
+
+          type: io.kestra.plugin.core.runner.Process
+
+
+
+        inputFiles:
+
+          zscore.csv: "{{ outputs.compute_zscore.outputFiles['zscore.csv'] }}"
+
+
+
+        commands:
+
+          - |
+
+            /usr/bin/python3 - <<'PY'
+
+            import pandas as pd
+
+            import sys
+
+
+
+            df = pd.read_csv(
+
+                "{{ workingDir }}/zscore.csv"
+
+            )
+
+
+
+            ordinaires = df[
+
+                df["zscore"] <= 2
+
+            ].copy()
+
+
+
+            if len(ordinaires) != 684:
+
+
+
+                print(
+
+                    "ECHEC EXTRACTION ORDINAIRES : "
+
+                    f"{len(ordinaires)} lignes, "
+
+                    "684 attendues"
+
+                )
+
+
+
+                sys.exit(1)
+
+
+
+            ordinaires.to_csv(
+
+                "vins_ordinaires.csv",
+
+                index=False
+
+            )
+
+
+
+            print(
+
+                "Vins ordinaires exportes : "
+
+                f"{len(ordinaires)}"
+
+            )
+
+            PY
+
+
+
+        outputFiles:
+
+          - "vins_ordinaires.csv"
+
+
+
+
+
+  # ============================================================
+
+  # 23. FIN DU WORKFLOW
+
+  # ============================================================
+
+
+
+  - id: workflow_complete
+
+    type: io.kestra.plugin.core.log.Log
+
+
+
+    message: >
+
+      Workflow BottleNeck termine avec succes :
+
+      sources validees, nettoyage,
+
+      dedoublonnage, tests,
+
+      fusion, chiffre d'affaires,
+
+      z-score et extractions termines.
+
+
+
+
+
+# ==============================================================
+
+# GESTION GLOBALE DES ERREURS
+
+# ==============================================================
+
+
+
+errors:
+
+
+
+  - id: alert_echec
+
+    type: io.kestra.plugin.core.log.Log
+
+
+
+    level: ERROR
+
+
+
+    message: >
+
+      ECHEC DU WORKFLOW BOTTLENECK -
+
+      execution {{ execution.id }}.
+
+      Une tache nominale ou un test a echoue.
+
+      Consulter les Logs pour identifier
+
+      la cause exacte.
+
+
+
+
+
+# ==============================================================
+
+# PLANIFICATION
+
+#
+
+# Le 15 de chaque mois a 09:00
+
+# ==============================================================
+
+
+
+triggers:
+
+
+
+  - id: monthly_schedule
+
+    type: io.kestra.plugin.core.trigger.Schedule
+
+
+
+    cron: "0 9 15 * *"
+
+
+
+    timezone: "Europe/Paris"

@@ -1,0 +1,510 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : EL-BOUSIYDY_Hassna_1_support de presentation_052026.pptx
+ppt/slides/slide1.xml
+Pipeline ELT Météo
+GreenAndCoop
+Construire et tester une infrastructure de données
+GreenAndCoop —
+Projet
+ Forecast
+Hassna
+ EL-BOUSIYDY
+Stack : Docker · PostgreSQL ·
+Airbyte
+ · DBT Core · AWS RDS · ECS
+Fargate
+ · CloudWatch
+ppt/slides/slide2.xml
+Contexte et objectif métier
+🏢 GreenAndCoop
+Coopérative française d'électricité renouvelable (Hauts-de-France)
+Projet Forecast : améliorer les modèles de prévision de la demande
+Besoin : intégrer de nouvelles sources de données météo semi-professionnelles
+3 enjeux stratégiques
+⚡  Équilibrer le réseau
+Éviter les pénalités financières
+☀️  Optimiser la production
+Solaire & éolien intermittents
+💰  Maîtriser les coûts
+Réduire les achats d'urgence
+ppt/slides/slide3.xml
+Sources de données météorologiques
+InfoClimat
+Réseau public
+Format : JSON HTTP
+4 stations : Bergues, Hazebrouck,
+Armentières, Lille-Lesquin
+Fréquence : toutes les 10–15 min
+Licence : CC BY
+WU — Ichtegem (BE)
+Station amateur
+Format : XLSX local
+Station : IICHTE19 — WeerstationBS
+Lat 51.092°N / Lon 2.999°E
+Altitude : 15 m
+Fréquence : toutes les 30 min
+WU — La Madeleine (FR)
+Station amateur
+Format : XLSX local
+Station : ILAMAD25
+Lat 50.659°N / Lon 3.07°E
+Altitude : 23 m
+Fréquence : toutes les 30 min
+Sources
+identifiées
+ par la mission :
+	-
+InfoClimat
+ : données JSON open data
+	- Weather Underground
+Ichtegem
+ : station IICHTE19
+	- Weather Underground La Madeleine : station ILAMAD25
+Dans le prototype final
+validé
+ sur AWS :
+	- 3 tables RAW
+ingérées
+ dans RDS
+	- 2 stations Weather Underground
+intégrées
+ dans
+dim_weather_stations
+	- 579 observations
+météo
+
+exploitables
+ dans
+fact_weather_observations
+Les données
+InfoClimat
+ sont conservées en RAW ;
+les observations finales exploitables proviennent des deux stations
+Weather
+ Underground après standardisation et filtrage qualité.
+ppt/slides/slide4.xml
+Architecture locale — Développement (Docker)
+Sources
+météo
+JSON + XLSX
+→
+Airbyte
+Ingestion ELT
+:8000
+→
+PostgreSQL
+RAW
+Données brutes
+:5432
+→
+DBT Core
+Staging →
+Intermed. → Marts
+→
+marts.*
+Schéma étoile
+fact + dim
+Schémas PostgreSQL
+raw
+Tables brutes — ingérées par Airbyte, non modifiées
+staging
+Nettoyage, renommage colonnes, cast types
+intermediate
+Unification des 3 sources (int_weather_observations_unified)
+marts
+Schéma en étoile final (fact + dim_stations + dim_date)
+ppt/slides/slide5.xml
+Architecture
+déployée
+ — AWS (Production)
+AWS ECR
+Image Docker DBT
+greenandcoop-dbt:latest
+EventBridge
+greenandcoop
+-
+dbt
+-hourly-rule
+Planification : rate(1 hour)
+Amazon RDS
+PostgreSQL 15 manage
+eu-north-1 ·
+weather_db
+AWS ECS Fargate
+Exécution
+
+planifiée
+dbt
+ run +
+dbt
+ test
+CloudWatch
+Logs /
+ecs
+/
+greenandcoop-dbt
+RDSOSMetrics
+ · Enhanced Mon
+Secrets Manager
+Mot de passe RDS injecté
+via DBT_PASSWORD dans ECS
+Haute disponibilité :
+Multi-AZ non activé (Free Tier) → résilience assurée par :
+sauvegardes automatiques RDS (rétention 1 jour), snapshots (2026-06-13/14/15),
+stockage chiffré (
+StorageEncrypted
+=
+True
+), monitoring
+Enhanced
+
+CloudWatch
+.
+⚠️  Surveiller le billing AWS · Activer les backups RDS · Ne jamais écrire les credentials en dur
+ppt/slides/slide6.xml
+Pipeline ELT — Logigramme du processus
+Contrôles :
+- Vérification des tables RAW dans RDS
+-
+dbt
+ run : PASS=7 / ERROR=0
+-
+dbt
+ test : PASS=24 / ERROR=0
+- Vérification qualité : 0
+null
+ sur température, humidité, pression
+- Logs
+CloudWatch
+ consultables
+Cas d’erreur :
+- Échec
+Airbyte
+ → vérifier connecteur/source/destination
+- Échec
+dbt
+ run → consulter logs ECS
+CloudWatch
+- Échec
+dbt
+ test → corriger modèle ou règle qualité
+- Problème RDS → vérifier
+CloudWatch
+, sauvegardes et métriques
+ppt/slides/slide7.xml
+Ingestion
+Airbyte
+ → PostgreSQL/RDS RAW
+Configuration
+Airbyte
+3 sources météo configurées :
+	-
+InfoClimat
+ JSON
+	- WU Belgique
+	 - WU France
+Destination : PostgreSQL / RDS
+Mode : Full
+Refresh
+Chargement brut dans le schéma
+raw
+Résultat : 3 tables RAW créées dans PostgreSQL/RDS - 3 822 lignes brutes chargées avant transformation DBT.
+Capture
+Airbyte
+ : synchronisation réussie d’une source
+Weather
+ Underground vers PostgreSQL/RDS.
+ppt/slides/slide8.xml
+Transformations DBT — 3 couches
+Staging
+Fichiers :
+stg_infoclimat_weather.sql
+stg_wunderground_belgique_ichtegem.sql
+stg_wunderground_france_lamadeleine.sql
+Rôle :
+Nettoyage, renommage colonnes, cast des types (TEXT → FLOAT, TIMESTAMPTZ)
+Intermediate
+Fichiers :
+int_weather_observations_unified.sql
+Rôle :
+UNION ALL des 3 sources staging → 1 table
+unifiée
+ avec
+source_name
+Marts
+Fichiers :
+fact_weather_observations.sql
+dim_weather_stations.sql
+dim_date.sql
+Rôle :
+Schéma en étoile final — tables matérialisées pour l’analyse.
+Les clés et relations sont contrôlées par les tests DBT.
+Exécution
+ sur AWS :
+dbt
+ run --target
+aws
+ → PASS=7 / ERROR=0
+dbt
+ test --target
+aws
+ → PASS=24 / ERROR=0
+ppt/slides/slide9.xml
+Schéma analytique en étoile — Couche Marts
+FAIT
+fact_weather_observations
+observation_id (PK)
+station_id (FK)
+date_id (FK)
+observation_timestamp
+temperature_c
+humidity_pct
+pressure_hpa
+wind_speed_kmh
+source_name
+DIM — Stations
+dim_weather_stations
+station_id (PK)
+station_name
+city
+latitude / longitude
+elevation_m
+network_source
+DIM — Date
+dim_date
+date_id (PK)
+full_date
+year / month / day
+quarter
+month_name
+day_of_week
+Relations :
+fact_weather_observations.station_id
+ →
+dim_weather_stations.station_id
+fact_weather_observations.date_id
+ →
+dim_date.date_id
+Résultat
+ final AWS :
+-
+fact_weather_observations
+ : 579
+lignes
+-
+dim_weather_stations
+ : 2
+lignes
+-
+dim_date
+ : 1
+ligne
+ppt/slides/slide10.xml
+Tests qualité des données — DBT
+Tests standards (schema.yml)
+✓
+not_null
+ →
+observation_id
+,
+station_id
+,
+date_id
+,
+observation_timestamp
+✓ unique →
+observation_id
+✓ relationships →
+station_id
+ →
+dim_weather_stations
+✓ relationships →
+date_id
+ →
+dim_date
+Tests métier personnalisés (tests/)
+◆
+test_temperature_range.sql
+ → -20°C < T < 45°C
+◆
+test_humidity_range.sql
+ → 0% ≤ H ≤ 100%
+◆
+test_pressure_positive.sql
+ → 800 < P < 1 100
+hPa
+◆
+test_no_duplicate_station_timestamp.sql
+Contrôles qualité sur
+fact_weather_observations
+Lignes
+ finales
+579
+Stations
+2
+station_id
+ null
+0
+observation_timestamp
+ null
+0
+temperature_c
+ null
+0
+humidity_pct
+ null
+0
+Résultats
+
+validés
+ :
+dbt
+ run --target
+aws
+   → PASS=7  / ERROR=0
+dbt
+ test --target
+aws
+  → PASS=24 / ERROR=0
+pressure_hpa
+ null
+0
+Doublons
+0
+Températures
+ hors plage
+0
+Chargement RAW →
+Marts
+ : - RAW total : 3822 lignes  - Table finale : 579 lignes  - Taux de conservation analytique : 15.15 %
+ppt/slides/slide11.xml
+Documentation et lineage DBT
+Documentation DBT
+générée
+ avec
+dbt
+ docs generate.
+Lineage
+vérifié
+ dans
+dbt
+ docs serve.
+Le
+graphe
+ montre le flux
+complet
+ : sources RAW → staging → intermediate → marts.
+Capture DBT Docs :
+lineage
+ complet des modèles, de
+raw
+ vers
+staging
+,
+intermediate
+ puis
+marts
+, avec les tests qualité associés.
+ppt/slides/slide12.xml
+Preuves
+
+d’installation
+ AWS
+Amazon RDS — PostgreSQL
+Exécution
+ DBT sur AWS
+Instance PostgreSQL disponible sur AWS.
+Logs DBT consultables après exécution sur AWS.
+Infrastructure AWS validée : base PostgreSQL disponible et exécution DBT suivie dans
+CloudWatch
+.
+ppt/slides/slide13.xml
+Conclusion & Bilan
+Ce qui a été livré :
+PostgreSQL
+déployé
+ sur Amazon RDS
+Airbyte
+ local configuré pour alimenter Amazon RDS
+DBT
+conteneurisé
+ avec Docker
+Image DBT
+publiée
+ dans Amazon ECR
+Transformations DBT
+exécutées
+ via ECS
+Fargate
+Planification
+automatique
+ avec
+EventBridge
+ : rate(1 hour)
+Logs DBT
+centralisés
+ dans CloudWatch
+Monitoring RDS
+activé
+ avec Enhanced Monitoring
+Sauvegardes
+
+automatiques
+ RDS
+disponibles
+Secrets
+sécurisés
+ avec AWS Secrets Manager
+Données finales
+vérifiées
+ : 579 observations, 2 stations, 0 null critique
+Limites & améliorations :
+Ingestion XLSX
+semi-manuelle
+ (amélioration : S3 + trigger automatique)
+Limite du prototype :
+Airbyte
+ exécuté localement avec
+Docker,mais
+ configuré pour charger les données dans Amazon RDS.
+Amélioration : déploiement complet d’
+Airbyte
+ sur AWS.
+Multi-AZ non activé (Free Tier) → résilience via sauvegardes automatiques RDS
+Données limitées à la période oct. 2024 (extension possible avec nouvelles stations)
+Optimisation PostgreSQL à renforcer :   ajout d’index sur
+station_id
+,
+date_id
+ et
+observation_timestamp
+.
+Merci - Questions ?
+ppt/notesSlides/notesSlide6.xml
+6
+ppt/notesSlides/notesSlide3.xml
+3
+ppt/notesSlides/notesSlide1.xml
+1
+ppt/notesSlides/notesSlide2.xml
+2
+ppt/notesSlides/notesSlide4.xml
+4
+ppt/notesSlides/notesSlide5.xml
+5
+ppt/notesSlides/notesSlide7.xml
+7
+ppt/notesSlides/notesSlide8.xml
+8
+ppt/notesSlides/notesSlide9.xml
+9
+ppt/notesSlides/notesSlide10.xml
+10
+ppt/notesSlides/notesSlide13.xml
+13
+ppt/notesSlides/notesSlide12.xml
+12
+ppt/notesSlides/notesSlide11.xml
+11

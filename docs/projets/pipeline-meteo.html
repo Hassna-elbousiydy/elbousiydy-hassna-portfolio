@@ -1,4 +1,92 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#FDF9F0"><meta name="description" content="Un flux de données météorologiques, de l&#x27;ingestion à la modélisation analytique, avec des transformations testables et des composants cloud."><meta property="og:type" content="article"><meta property="og:title" content="Pipeline de données météo | Hassna El-Bousiydy"><meta property="og:description" content="Un flux de données météorologiques, de l&#x27;ingestion à la modélisation analytique, avec des transformations testables et des composants cloud."><title>Pipeline de données météo | Hassna El-Bousiydy</title><link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/css/styles.css"><script src="../assets/js/main.js" defer></script></head>
-<body><a class="skip-link" href="#contenu">Aller au contenu</a><header class="site-header"><div class="container header-row"><a class="logo" href="../index.html" aria-label="Hassna El-Bousiydy, accueil"><span class="logo-mark" aria-hidden="true">H</span> Hassna El-Bousiydy</a><nav class="header-nav" aria-label="Navigation principale"><a href="../index.html#projets">Projets</a><a href="../index.html#expertises">Expertises</a><a href="../index.html#apropos">À propos</a><a class="nav-pill" href="../index.html#contact">Contact</a></nav></div></header>
-<main id="contenu"><div class="case-hero"><div class="container"><div class="breadcrumbs"><a href="../index.html#projets">Projets</a><span aria-hidden="true">/</span><span>Pipeline de données météo</span></div><span class="eyebrow">Étude de cas / ELT &amp; qualité</span><h1 class="serif">Pipeline de données météo</h1><p class="case-summary">Un flux de données météorologiques, de l&#x27;ingestion à la modélisation analytique, avec des transformations testables et des composants cloud.</p><div class="case-tags"><span>PostgreSQL</span><span>Airbyte</span><span>dbt</span><span>SQL</span><span>AWS RDS</span><span>AWS ECS</span></div></div></div><div class="container" style="padding-top:37px"><div class="case-layout"><article class="case-content"><figure class="flow-visual"><img src="../assets/img/weather-pipeline.svg" alt="Schéma simplifié du projet Pipeline de données météo" loading="lazy" width="1100" height="400"></figure><p class="flow-caption">Schéma de lecture simplifié. Les outils et étapes détaillés sont décrits ci-dessous.</p><section class="case-section" id="probleme"><h2 class="serif">Le problème</h2><p>Des données météorologiques issues de sources différentes doivent devenir un jeu cohérent et exploitable pour l'analyse. Le travail ne se limite pas à les importer : il faut contrôler les doublons, les clés, la structure et la reproductibilité des transformations.</p></section><section class="case-section" id="approche"><h2 class="serif">Architecture et déroulement</h2><ol><li><strong>Ingestion.</strong> Utilisation d'Airbyte en environnement local pour collecter et synchroniser les données de sources disponibles.</li><li><strong>Stockage.</strong> Centralisation dans PostgreSQL, séparation entre données reçues et modèles de restitution.</li><li><strong>Transformations.</strong> Modélisation SQL avec dbt, normalisation et construction de tables métier exploitables.</li><li><strong>Qualité.</strong> Tests sur les hypothèses de cohérence, clés et relations utilisées par les modèles.</li><li><strong>Cloud.</strong> Étude et mise en œuvre des composants AWS associés au traitement : RDS et exécution via ECS. L'ingestion Airbyte mentionnée ici reste locale.</li></ol><p>Le découplage entre ingestion, modèles et exécution simplifie la compréhension et les tests de chaque étape.</p></section><section class="case-section" id="decisions"><h2 class="serif">Les décisions importantes</h2><h3>Pourquoi dbt après PostgreSQL ?</h3><p>Pour mettre les transformations SQL dans une structure versionnable, testable et documentable, plutôt que de maintenir des requêtes isolées et difficiles à réutiliser.</p><h3>Pourquoi distinguer local et cloud ?</h3><p>Le projet comporte une partie d'ingestion locale et des composants AWS. Les décrire séparément évite d'attribuer à l'environnement cloud des services qui n'y ont pas été exécutés.</p></section><section class="case-section" id="validation"><h2 class="serif">Validation et valeur ajoutée</h2><p>Le résultat attendu est un pipeline de bout en bout dont on peut expliquer le cheminement des données et contrôler les modèles produits. La démarche est documentée par les modèles dbt, les tests associés, les configurations et les livrables de formation.</p><p>Les chiffres exacts de volumétrie et de couverture de tests seront ajoutés uniquement avec les artefacts de validation correspondants.</p></section><section class="case-section" id="limites"><h2 class="serif">Points de vigilance</h2><p>Surveiller la fraîcheur des sources, les anomalies de schéma et le coût des traitements planifiés. Le passage à un usage durable nécessiterait également des règles d'alerte et de reprise après échec.</p><div class="case-note">Cette étude décrit le travail réalisé pendant la formation. Elle ne revendique pas une exploitation commerciale en production ni une ingestion Airbyte déployée sur AWS.</div></section><div class="case-actions"><a class="button button-primary" href="mailto:722msbv09@mozmail.com?subject=Livrables%20du%20pipeline%20meteo">Demander les livrables <span class="arrow" aria-hidden="true">↗</span></a></div></article><aside class="case-sidebar"><h3>Dans cette étude de cas</h3><a href="#probleme">Problème</a><a href="#approche">Architecture</a><a href="#decisions">Décisions</a><a href="#validation">Validation</a><a href="#limites">Points de vigilance</a><a href="../index.html#projets" style="border-top:1px solid #d7e5da;margin-top:12px;padding-top:15px">← Retour aux projets</a></aside></div><div class="case-back"><a class="text-link" href="../index.html#projets">← Explorer les autres projets</a></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering & Applied AI</span><div class="footer-links"><a href="../index.html#projets">Tous les projets</a><a href="mailto:722msbv09@mozmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" target="_blank" rel="noopener noreferrer">GitHub</a><a href="../mentions-legales.html">Mentions légales</a></div></div></footer></body></html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#F8F7F2"><meta name="description" content="Des sources météo hétérogènes à des tables analytiques testées, avec ingestion locale et exécution des transformations sur AWS."><meta property="og:type" content="article"><meta property="og:title" content="Pipeline météo sur AWS | Hassna El-Bousiydy"><meta property="og:description" content="Des sources météo hétérogènes à des tables analytiques testées, avec ingestion locale et exécution des transformations sur AWS."><meta property="og:image" content="../assets/img/pipeline-meteo.svg"><title>Pipeline météo sur AWS | Hassna El-Bousiydy</title><link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/css/styles.css"><script src="../assets/js/main.js" defer></script>
+</head>
+<body><a class="skip-link" href="#contenu">Aller au contenu</a>
+<header class="site-header">
+<div class="container header-row"><a class="logo" href="../index.html" aria-label="Hassna El-Bousiydy, accueil"><span class="logo-mark" aria-hidden="true">H</span> Hassna El-Bousiydy</a>
+<nav class="header-nav" aria-label="Navigation principale"><a href="../index.html#projets">Projets</a><a href="../index.html#expertises">Expertises</a><a href="../index.html#apropos">À propos</a><a class="nav-pill" href="../index.html#contact">Contact</a>
+</nav>
+</div>
+</header>
+<main id="contenu">
+<div class="case-hero">
+<div class="container">
+<div class="breadcrumbs"><a href="../index.html#projets">Projets</a><span aria-hidden="true">/</span><span>Pipeline météo sur AWS</span>
+</div><span class="eyebrow">ELT · Modélisation · Cloud</span>
+<h1 class="serif">Pipeline météo sur AWS</h1>
+<p class="case-summary">Des sources météo hétérogènes à des tables analytiques testées, avec ingestion locale et exécution des transformations sur AWS.</p>
+<div class="case-tags"><span>Python</span><span>SQL</span><span>Airbyte</span><span>PostgreSQL</span><span>dbt</span><span>AWS</span><span>Docker</span>
+</div>
+<p class="status-line">Projet de formation · Ingestion locale / transformations exécutées sur AWS</p>
+</div>
+</div>
+<div class="container case-container">
+<div class="case-layout">
+<article class="case-content">
+<figure class="flow-visual"><a href="../assets/img/pipeline-meteo.svg" aria-label="Ouvrir le schéma en grand"><img src="../assets/img/pipeline-meteo.svg" alt="Airbyte : Ingestion locale → RDS : Stockage PostgreSQL → dbt sur ECS : Transformations AWS → Marts : Modèles &amp; tests" width="1100" height="400"></a>
+</figure>
+<p class="flow-caption">Schéma explicatif du périmètre décrit ; les environnements sont précisés dans l’étude.</p>
+<section class="case-section" id="probleme">
+<h2 class="serif">Le besoin et ma contribution</h2>
+<p>Des observations issues de plusieurs sources doivent être rapprochées à une granularité explicite pour devenir exploitables. J’ai structuré le stockage, les transformations SQL, les contrôles métier et leur exécution conteneurisée.</p>
+</section>
+<section class="case-section" id="architecture">
+<h2 class="serif">Du RAW aux modèles analytiques</h2>
+<ul>
+<li><strong>Collecter :</strong> Airbyte est exécuté localement et alimente PostgreSQL sur RDS.</li>
+<li><strong>Transformer :</strong> couches RAW, staging, intermédiaire puis marts ; table de faits des observations et dimensions date/station.</li>
+<li><strong>Exécuter :</strong> image conteneur stockée dans ECR, tâche ECS Fargate, planification EventBridge et journaux CloudWatch.</li>
+<li><strong>Configurer :</strong> identifiants injectés via Secrets Manager ; paramètres de sauvegarde et de chiffrement RDS.</li>
+</ul>
+</section>
+<section class="case-section" id="decisions">
+<h2 class="serif">Des modèles compréhensibles et testables</h2>
+<p>La séparation des couches permet de suivre les transformations et de tester chaque modèle. Les contrôles combinent unicité, valeurs non nulles, relations et règles métier sur la température, l’humidité, la pression et les doublons station/horodatage.</p>
+<figure class="evidence-figure"><a href="../assets/evidence/meteo-dbt-lineage.png"><img src="../assets/evidence/meteo-dbt-lineage.png" width="1841" height="640" loading="lazy" alt="Capture originale de la documentation dbt : sources, staging, observations unifiées, dimensions, faits et tests métier"></a>
+<figcaption>Capture originale du lineage dbt. Ouvrir l’image pour lire les modèles et les tests.</figcaption>
+</figure>
+</section>
+<section class="case-section" id="resultats">
+<h2 class="serif">Résultats documentés</h2>
+<div class="metrics">
+<div class="metric-box"><strong>7</strong><span>modèles dbt</span>
+</div>
+<div class="metric-box"><strong>24</strong><span>tests dbt rapportés</span>
+</div>
+<div class="metric-box"><strong>579</strong><span>observations analytiques</span>
+</div>
+</div>
+<p>Les livrables consignent 3 822 lignes RAW et 579 observations analytiques pour deux stations Weather Underground. Ces nombres décrivent des niveaux différents : leur écart n’est pas un taux de perte ou de déduplication. Le résultat analytique présenté porte sur ces deux stations ; InfoClimat apparaît également dans les sources et le lineage.</p>
+</section>
+<section class="case-section" id="limites">
+<h2 class="serif">Périmètre et prochaines étapes</h2>
+<p>La démonstration cloud ne constitue pas une exploitation commerciale. Airbyte reste local ; RDS est en configuration Single-AZ et le périmètre temporel est limité. Les sources dbt complètes restent à regrouper dans un dépôt reproductible. La suite consiste à renforcer la reprise après échec, les alertes de fraîcheur et l’historisation.</p>
+</section>
+<section class="case-section" id="preuves">
+<h2 class="serif">Code et éléments de preuve</h2>
+<p>Les extraits et résultats ci-dessous proviennent des livrables du projet, consultés le 16 novembre 2026. Les traitements n’ont pas été réexécutés pour cette présentation.</p>
+<ul class="evidence-list">
+<li><a class="text-link" href="../assets/evidence/meteo-presentation.txt">Présentation d’origine — transcription des livrables</a>
+</li>
+<li><a class="text-link" href="../assets/evidence/meteo-dbt-lineage.png">Capture originale du lineage dbt</a>
+</li>
+</ul>
+</section>
+</article>
+<aside class="case-sidebar" aria-label="Sommaire de l’étude">
+<h3>Dans cette étude</h3><a href="#probleme">Le besoin et ma contribution</a><a href="#architecture">Du RAW aux modèles analytiques</a><a href="#decisions">Des modèles compréhensibles et testables</a><a href="#resultats">Résultats documentés</a><a href="#limites">Périmètre et prochaines étapes</a><a href="#preuves">Code et preuves</a><a class="sidebar-back" href="../index.html#projets">← Tous les projets</a>
+</aside>
+</div>
+<div class="case-back"><a class="text-link" href="../index.html#projets">← Explorer les autres projets</a>
+</div>
+</div>
+</main>
+<footer class="site-footer">
+<div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering & Applied AI</span>
+<div class="footer-links"><a href="../index.html#projets">Tous les projets</a><a href="mailto:722msbv09@mozmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" target="_blank" rel="noopener noreferrer">GitHub</a><a href="../mentions-legales.html">Mentions légales</a>
+</div>
+</div>
+</footer>
+</body>
+</html>

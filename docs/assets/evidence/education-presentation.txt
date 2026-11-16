@@ -1,0 +1,333 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : EL-BOUSIYDY_Hassna_2_support_01102025.pptx
+ppt/slides/slide1.xml
+academy
+29 octobre 2025
+Analyse des données de systèmes éducatifs
+pour l'expansion internationale d'academy
+Exploration des indicateurs éducatifs pour identifier les marchés à fort potentiel
+startup EdTech
+expansion internationale
+ppt/slides/slide2.xml
+Contexte du projet et problématique
+Problématique centrale
+Une analyse manuelle de chaque indicateur serait :
+Chronophage
+Inefficace
+Impraticable
+Nécessité impérative de réduire le périmètre des données
+Défis de l'analyse des données
+Volume et granularité des données : trop d'indicateurs dans le fichier "Data"
+Réduction du périmètre des données pour faciliter l'analyse
+Projet d'expansion d'academy
+Start-up EdTech spécialisée dans les contenus de formation en ligne pour les niveaux lycée et université
+Objectif : Identifier les marchés à fort potentiel de clients pour l'expansion internationale
+Mark, le manager, souhaite explorer les pays avec un fort potentiel de clients pour les services d'academy
+Les données couvrent > 200 pays et des milliers d’indicateurs éducatifs
+ppt/slides/slide3.xml
+Plan de la présentation
+Les données
+utilisées
+Préparation
+ &
+nettoyage
+ Les principales tendances de l’analyse exploratoire
+Analyse du taux de valeurs manquantes
+Écarter les indicateurs incomplets (plus de 30% de valeurs manquantes)
+Vérification de la cohérence des données
+Sélection
+ finale
+Les
+corrélations
+ entre
+indicateurs
+Les
+résultats
+
+clés
+1
+3
+5
+2
+4
+6
+Analyse ciblée
+Concentré sur les indicateurs pertinents
+Insights pertinents
+Résultats exploitables pour la décision
+Stratégie d'expansion
+Base solide pour la prise de décision
+ppt/slides/slide4.xml
+Jeux de Données
+Utilisés
+Fichiers
+
+fournis
+ :
+Des milliers d’indicateurs et des décennies de données
+Cibler les informations utiles pour dégager des
+insights exploitables
+liés à notre objectif d’expansion
+Source des données
+Données publiques
+EdStats
+ de la Banque mondiale sur l’éducation
+Plus de 200 pays sont couverts
+Contient des indicateurs variés (scolarisation, alphabétisation, dépenses éducatives, etc.) sur de nombreuses années.
+EdStatsCountry-Series.csv (613 lignes, 4 colonnes)
+EdStatsCountry.csv (241 lignes, 32 colonnes)
+EdStatsData.csv (886 930 lignes, 70 colonnes)
+EdStatsFootNote.csv (643 638 lignes, 5 colonnes)
+EdStatsSeries.csv (3 665 lignes, 21 colonnes)
+ppt/slides/slide5.xml
+Méthodologie de nettoyage et de réduction
+Analyse
+
+exploratoire
+Taux de scolarisation
+Notamment dans l'enseignement secondaire et supérieur, pour évaluer la taille du public cible
+Population jeune
+Démographie des 15-24 ans, ou des tranches d'âge pertinentes pour le lycée et l'université
+Accès à Internet
+Pourcentage de la population ayant accès à Internet, fondamental pour une entreprise d'EdTech en ligne
+Dépenses publiques en éducation
+Indicateur de l'investissement d'un pays dans son système éducatif
+Filtrage
+ par pertinence métier
+Analyse
+
+exploratoire
+Qualité des données :
+Valeurs manquantes, Doublons
+Nettoyage
+ des données
+Statistiques de base : calcul des métriques descriptives
+Structure du
+dataset
+ :
+identification des variables clés (pays, années, codes indicateurs…) et de leurs types
+Suppression des agrégats :
+Suppression des faux pays
+Uniformisation des années :
+concentration sur la période 2000–2020 (données réelles récentes)
+Standardisation des années : r
+écupération d’un format années du texte (‘’
+xxxx
+’’ ou ‘’x’’ est un ‘’
+int
+’’)
+ppt/slides/slide6.xml
+Indicateurs retenus et justification
+Indicateur
+Justification métier
+Taux de scolarisation brut, enseignement supérieur, les deux sexes (%)
+Évalue la taille du public cible pour les formations en ligne de niveau université
+Pourcentage d'individus utilisant Internet
+Fondamental pour une entreprise d'EdTech en ligne, indique le potentiel d'access à distance
+Population jeune (15-24 ans)
+Démographie directe du potentiel de marché pour les niveaux lycée et université
+Dépenses publiques en éducation
+Indicateur de l'investissement d'un pays dans son système éducatif, pouvant influencer la demande
+Niveau de développement économique (PIB par habitant)
+Donne une idée de la capacité des ménages à investir dans l'éducation
+15
+indicateurs
+ qui
+couvrent
+ les aspects éducatif, démographique et économique du potentiel de marché pour Academy
+ppt/slides/slide7.xml
+Analyse de corrélation des indicateurs
+Corrélations très fortes
+(≥ 0,80) entre plusieurs indicateurs redondants,
+Certains indicateurs comme les
+dépenses publiques en éducation
+ou les
+enfants non scolarisés
+offrent une information unique
+En fixant un seuil de « 0,70 » pour supprimer les doublons pour ne conserver que les indicateurs les plus représentatifs.
+Vérification
+ de redundance :
+
+Un seuil de corrélation de
+‘’0,70’’
+a été fixé pour réduire les redondances
+Le jeu de données final regroupe :
+12 indicateurs
+clés pour
+203 pays
+ppt/slides/slide8.xml
+Statistiques descriptives : aperçu global des indicateurs
+Alphabétisation des jeunes : médiane à 97,3 %, mais plusieurs pays sous les 52 %.
+Dépenses éducatives (% du PIB) : la plupart des pays entre 3 % et 5,5 %.
+Budget public alloué à l’éducation : médiane à 14,2 %, un pays atteint près de 30 %.
+Les distributions par indicateur révèlent de fortes disparités entre pays :
+ppt/slides/slide9.xml
+Méthodes de recommandation des pays cibles
+Deux approches complémentaires ont été utilisées :
+Approche 1 : Top 5 par indicateur
+Identification des pays qui apparaissent de manière récurrente parmi les 5 plus faibles performances pour 6 indicateurs éducatifs clés.
+Alphabétisation des jeunes
+Scolarisation secondaire
+Scolarisation tertiaire
+Enfants non scolarisés
+Redoublement
+Ratio élèves/enseignant
+Analyse des "Top 5" par indicateur pour identifier les pays prioritaires
+Pondération des indicateurs :
+Approche 2 : Score pondéré multi-critères
+Développement d'un score de besoin synthétique, allant de 0 à 100, pour chaque pays, en agrégant plusieurs indicateurs pondérés.
+Indicateur
+Direction
+Poids
+Alphabétisation des jeunes
+Inversé
+25%
+Scolarisation secondaire
+Inversé
+20%
+Enfants hors école
+Direct
+20%
+Ratio élèves/enseignant
+Direct
+15%
+Taux de redoublement
+Direct
+10%
+Scolarisation tertiaire
+Inversé
+10%
+Score final = besoin identifié × pondération
+ppt/slides/slide10.xml
+Résultats : Pays Cibles Prioritaires
+Tchad
+Score de
+besoin
+* :
+62,24
+4 Top 5
+ *Score de besoin : évaluation de 0 à 100 indiquant le niveau de besoin éducatif
+République centrafricaine
+Score de besoin :
+62,90
+2 Top 5
+3 Top 5
+Niger
+Score de besoin :
+57,34
+2 Top 5
+Mozambique
+Score de besoin :
+51,85
+2 Top 5
+Malawi
+Score de besoin :
+49,21
+Justification de la sélection
+Points faibles récurrents sur les 6 indicateurs analysés
+Fort potentiel d'impact pour Academy
+Besoins éducatifs non satisfaits dans les domaines : alphabétisation, scolarisation, enfants hors école
+ppt/slides/slide11.xml
+Limites
+ et
+Prochaines
+ Étapes
+Limites
+ de
+l'analyse
+Temporalité
+ des données :
+Période 2000-2020, peut ne pas refléter les évolutions récentes des systèmes éducatifs
+.
+Nature des données :
+Agrégats de la Banque Mondiale, peut masquer des disparités régionales importantes.
+Périmètre
+ de
+l'analyse
+ :
+Absence de variables externes (stabilité politique, contexte économique, infrastructures numériques).
+Recommandations
+
+opérationnelles
+Enrichir
+
+l'analyse
+ quantitative :
+Intégrer des données macro-économiques, politiques et technologiques pour compléter le score de besoin.
+Mener des études de marché qualitatives :
+Réaliser des enquêtes approfondies pour comprendre les spécificités locales et les habitudes d'apprentissage.
+Envisager une approche par projets pilotes :
+Lancer des projets pilotes dans un ou deux pays prioritaires avant un déploiement à plus grande échelle.
+ppt/slides/slide12.xml
+Conclusion et Vision
+Stratégique
+Synthèse des points clés
+Méthodologie par
+filtrage thématique
+ des données et
+réduction par complétude
+Élimination des
+redondances
+ via l'analyse des corrélations
+Outils utilisés :
+Python
+ (Pandas, NumPy, Matplotlib, Seaborn)
+Base de données :
+~203 pays
+ ×
+12 indicateurs
+ (2000–2015)
+Vision Stratégique
+Expansion ciblée sur les
+5 pays prioritaires
+ identifiés
+Alignement des objectifs commerciaux avec la
+mission sociale
+Concentration des efforts là où ils seront
+les plus pertinents
+Implications pour
+A
+cademy
+Base de décision
+objective et axée sur les données
+Potentiel de marché
+significatif
+ dans les pays cibles
+Opportunité d'impact social
+majeur
+ par la résolution de besoins éducatifs
+Approche Stratégique
+Analyse Approfondie
+Études de marché qualitatives pour comprendre les spécificités locales
+Projets Pilotes
+Lancement de projets pilotes pour tester l'adéquation de l'offre
+Partenariats
+Collaboration avec des acteurs locaux pour faciliter le déploiement
+Suivi et Évaluation
+Mise en place de mécanismes pour mesurer l'impact et l'adoption
+ppt/notesSlides/notesSlide7.xml
+7
+ppt/notesSlides/notesSlide11.xml
+11
+ppt/notesSlides/notesSlide10.xml
+10
+ppt/notesSlides/notesSlide2.xml
+2
+ppt/notesSlides/notesSlide9.xml
+9
+ppt/notesSlides/notesSlide1.xml
+1
+ppt/notesSlides/notesSlide3.xml
+3
+ppt/notesSlides/notesSlide6.xml
+6
+ppt/notesSlides/notesSlide8.xml
+8
+ppt/notesSlides/notesSlide4.xml
+4
+ppt/notesSlides/notesSlide5.xml
+5
+ppt/notesSlides/notesSlide12.xml
+12

@@ -1,4 +1,79 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#FDF9F0"><meta name="description" content="Structurer et contrôler une migration de données de santé du format tabulaire vers une base orientée documents."><meta property="og:type" content="article"><meta property="og:title" content="Migration de données vers MongoDB | Hassna El-Bousiydy"><meta property="og:description" content="Structurer et contrôler une migration de données de santé du format tabulaire vers une base orientée documents."><title>Migration de données vers MongoDB | Hassna El-Bousiydy</title><link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/css/styles.css"><script src="../assets/js/main.js" defer></script></head>
-<body><a class="skip-link" href="#contenu">Aller au contenu</a><header class="site-header"><div class="container header-row"><a class="logo" href="../index.html" aria-label="Hassna El-Bousiydy, accueil"><span class="logo-mark" aria-hidden="true">H</span> Hassna El-Bousiydy</a><nav class="header-nav" aria-label="Navigation principale"><a href="../index.html#projets">Projets</a><a href="../index.html#expertises">Expertises</a><a href="../index.html#apropos">À propos</a><a class="nav-pill" href="../index.html#contact">Contact</a></nav></div></header>
-<main id="contenu"><div class="case-hero"><div class="container"><div class="breadcrumbs"><a href="../index.html#projets">Projets</a><span aria-hidden="true">/</span><span>Migration de données vers MongoDB</span></div><span class="eyebrow">Étude de cas / NoSQL</span><h1 class="serif">Migration de données vers MongoDB</h1><p class="case-summary">Structurer et contrôler une migration de données de santé du format tabulaire vers une base orientée documents.</p><div class="case-tags"><span>Python</span><span>MongoDB</span><span>CSV</span><span>Docker</span><span>Validation des données</span></div></div></div><div class="container" style="padding-top:37px"><div class="case-layout"><article class="case-content"><figure class="flow-visual"><img src="../assets/img/mongo-pipeline.svg" alt="Schéma simplifié du projet Migration de données vers MongoDB" loading="lazy" width="1100" height="400"></figure><p class="flow-caption">Schéma de lecture simplifié. Les outils et étapes détaillés sont décrits ci-dessous.</p><section class="case-section" id="probleme"><h2 class="serif">Le problème</h2><p>La migration de données de santé depuis un ensemble de fichiers CSV vers une base NoSQL implique plus qu'un changement de format. Il faut conserver les informations utiles, maîtriser les types et contrôler la cohérence des documents obtenus.</p></section><section class="case-section" id="approche"><h2 class="serif">Méthode de migration</h2><ol><li><strong>Analyser les sources.</strong> Inventorier les colonnes, les types et les valeurs manquantes.</li><li><strong>Préparer les documents.</strong> Nettoyer, transformer et structurer les enregistrements en Python.</li><li><strong>Charger MongoDB.</strong> Organiser les collections et définir les champs utiles aux recherches.</li><li><strong>Valider.</strong> Contrôler les volumes, la cohérence des champs, les clés et les résultats de requêtes.</li><li><strong>Reproduire.</strong> Isoler l'environnement d'exécution avec Docker et documenter la procédure.</li></ol></section><section class="case-section" id="decisions"><h2 class="serif">Arbitrages et fiabilité</h2><h3>Flexibilité ne veut pas dire absence de règles.</h3><p>Le modèle orienté documents facilite l'évolution de la structure, mais ne remplace pas les validations. Les contrôles sur les champs attendus et les types restent nécessaires.</p><h3>Indexation et contrôle des accès</h3><p>Les index doivent correspondre aux requêtes métier et être vérifiés sur le jeu de données réel. Les règles d'accès sont à traiter comme une partie de la conception, particulièrement lorsqu'il s'agit de données de santé.</p></section><section class="case-section" id="validation"><h2 class="serif">Ce qui est démontré</h2><p>Ce projet permet d'illustrer la démarche d'une migration contrôlée : préparation, insertion, vérification et documentation. Les résultats quantitatifs et extraits de données ne sont pas reproduits ici tant qu'ils n'ont pas été rapprochés des preuves du dossier final.</p></section><section class="case-section" id="limites"><h2 class="serif">Confidentialité et limites</h2><div class="case-note">Aucun fichier contenant des données médicales individuelles n'est publié sur ce site.</div><p>Les performances d'indexation dépendent de la forme des documents et des requêtes observées. Une utilisation réelle demanderait des règles explicites de confidentialité, de sauvegarde et de contrôle d'accès.</p></section><div class="case-actions"><a class="button button-primary" href="mailto:722msbv09@mozmail.com?subject=Livrables%20migration%20MongoDB">Demander les livrables <span class="arrow" aria-hidden="true">↗</span></a></div></article><aside class="case-sidebar"><h3>Dans cette étude de cas</h3><a href="#probleme">Problème</a><a href="#approche">Migration</a><a href="#decisions">Arbitrages</a><a href="#validation">Validation</a><a href="#limites">Confidentialité</a><a href="../index.html#projets" style="border-top:1px solid #d7e5da;margin-top:12px;padding-top:15px">← Retour aux projets</a></aside></div><div class="case-back"><a class="text-link" href="../index.html#projets">← Explorer les autres projets</a></div></div></main><footer class="site-footer"><div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering & Applied AI</span><div class="footer-links"><a href="../index.html#projets">Tous les projets</a><a href="mailto:722msbv09@mozmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" target="_blank" rel="noopener noreferrer">GitHub</a><a href="../mentions-legales.html">Mentions légales</a></div></div></footer></body></html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#F8F7F2"><meta name="description" content="Transformer un CSV de données de santé en documents typés, avec contrôles, insertion par lots, index et journalisation."><meta property="og:type" content="article"><meta property="og:title" content="Migration contrôlée vers MongoDB | Hassna El-Bousiydy"><meta property="og:description" content="Transformer un CSV de données de santé en documents typés, avec contrôles, insertion par lots, index et journalisation."><meta property="og:image" content="../assets/img/migration-mongodb.svg"><title>Migration contrôlée vers MongoDB | Hassna El-Bousiydy</title><link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/css/styles.css"><script src="../assets/js/main.js" defer></script>
+</head>
+<body><a class="skip-link" href="#contenu">Aller au contenu</a>
+<header class="site-header">
+<div class="container header-row"><a class="logo" href="../index.html" aria-label="Hassna El-Bousiydy, accueil"><span class="logo-mark" aria-hidden="true">H</span> Hassna El-Bousiydy</a>
+<nav class="header-nav" aria-label="Navigation principale"><a href="../index.html#projets">Projets</a><a href="../index.html#expertises">Expertises</a><a href="../index.html#apropos">À propos</a><a class="nav-pill" href="../index.html#contact">Contact</a>
+</nav>
+</div>
+</header>
+<main id="contenu">
+<div class="case-hero">
+<div class="container">
+<div class="breadcrumbs"><a href="../index.html#projets">Projets</a><span aria-hidden="true">/</span><span>Migration contrôlée vers MongoDB</span>
+</div><span class="eyebrow">Migration · Validation · Indexation</span>
+<h1 class="serif">Migration contrôlée vers MongoDB</h1>
+<p class="case-summary">Transformer un CSV de données de santé en documents typés, avec contrôles, insertion par lots, index et journalisation.</p>
+<div class="case-tags"><span>Python</span><span>MongoDB</span><span>Docker</span><span>unittest</span>
+</div>
+<p class="status-line">Projet de formation · Migration et contrôles en environnement local</p>
+</div>
+</div>
+<div class="container case-container">
+<div class="case-layout">
+<article class="case-content">
+<figure class="flow-visual"><a href="../assets/img/migration-mongodb.svg" aria-label="Ouvrir le schéma en grand"><img src="../assets/img/migration-mongodb.svg" alt="CSV : Contrôler les entrées → Python : Typer &amp; journaliser → MongoDB : Insérer &amp; indexer → Exports : Vérifier &amp; restituer" width="1100" height="400"></a>
+</figure>
+<p class="flow-caption">Schéma explicatif du périmètre décrit ; les environnements sont précisés dans l’étude.</p>
+<section class="case-section" id="probleme">
+<h2 class="serif">Le besoin et ma contribution</h2>
+<p>Préserver le sens et la qualité des données lors du passage à un stockage documentaire. J’ai implémenté le parsing, la transformation, les contrôles d’intégrité, la migration et les exports.</p>
+</section>
+<section class="case-section" id="architecture">
+<h2 class="serif">Une migration instrumentée</h2>
+<ul>
+<li>Colonnes attendues et fichiers non vides contrôlés avant transformation.</li>
+<li>Dates et valeurs numériques converties ; âges invalides rejetés.</li>
+<li>Insertion par lots de 500 documents par défaut, avec suivi des succès et échecs.</li>
+<li>Index simples, composé hôpital/date et textuel ; exports JSONL et CSV.</li>
+</ul>
+</section>
+<section class="case-section" id="decisions">
+<h2 class="serif">Distinguer les responsabilités</h2>
+<p>L’environnement Docker prévoit des comptes applicatif et de migration distincts, un healthcheck et des volumes dédiés. Les privilèges sont ceux des rôles MongoDB configurés. Les tests unittest ciblent parsing et transformation ; certains tests d’intégration nécessitent une base disponible.</p>
+</section>
+<section class="case-section" id="resultats">
+<h2 class="serif">Vérifier avant et après</h2>
+<p>Le script produit un bilan de validation et d’insertion, relève le nombre de documents et les index, puis permet une démonstration CRUD. Les extraits ci-dessous exposent les contrôles réellement implémentés, sans transformer la taille de lot en mesure de performance.</p>
+</section>
+<section class="case-section" id="limites">
+<h2 class="serif">Rendre la réconciliation plus stricte</h2>
+<p>Un écart de comptage n’est pas systématiquement bloquant. L’option de réinitialisation permet de recommencer une migration, mais ne constitue pas un mécanisme d’upsert idempotent. La suite est de renforcer la réconciliation, la gestion des rejets et les tests de rejeu.</p>
+</section>
+<section class="case-section" id="preuves">
+<h2 class="serif">Code et éléments de preuve</h2>
+<p>Les extraits et résultats ci-dessous proviennent des livrables du projet, consultés le 16 novembre 2026. Les traitements n’ont pas été réexécutés pour cette présentation.</p>
+<ul class="evidence-list">
+<li><a class="text-link" href="../assets/evidence/migration-controles.txt">Extraits originaux : typage, index, insertion et intégrité</a>
+</li>
+</ul>
+</section>
+</article>
+<aside class="case-sidebar" aria-label="Sommaire de l’étude">
+<h3>Dans cette étude</h3><a href="#probleme">Le besoin et ma contribution</a><a href="#architecture">Une migration instrumentée</a><a href="#decisions">Distinguer les responsabilités</a><a href="#resultats">Vérifier avant et après</a><a href="#limites">Rendre la réconciliation plus stricte</a><a href="#preuves">Code et preuves</a><a class="sidebar-back" href="../index.html#projets">← Tous les projets</a>
+</aside>
+</div>
+<div class="case-back"><a class="text-link" href="../index.html#projets">← Explorer les autres projets</a>
+</div>
+</div>
+</main>
+<footer class="site-footer">
+<div class="container footer-inner"><span>© 2026 Hassna El-Bousiydy · Data Engineering & Applied AI</span>
+<div class="footer-links"><a href="../index.html#projets">Tous les projets</a><a href="mailto:722msbv09@mozmail.com">Email</a><a href="https://github.com/Hassna-elbousiydy" target="_blank" rel="noopener noreferrer">GitHub</a><a href="../mentions-legales.html">Mentions légales</a>
+</div>
+</div>
+</footer>
+</body>
+</html>

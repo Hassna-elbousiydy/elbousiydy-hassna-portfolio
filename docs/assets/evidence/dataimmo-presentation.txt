@@ -1,0 +1,532 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : EL-BOUSIYDY_Hassna_2_support_012025.pptx
+ppt/slides/slide1.xml
+Création et utilisation de la base de données
+Hassna EL-BOUSIYDY
+ppt/slides/slide2.xml
+Contexte du projet
+PROJET DATAIMMO - PROOF OF CONCEPT
+• L'entreprise : Laplace
+Immo
+, réseau national d'agences immobilières
+• Objectif : Analyser le marché immobilier français via une base de données centralisée
+• Périmètre du POC : Données du 1er semestre 2020
+• Livrables attendus :
+   - Dictionnaire des données conforme au RGPD
+   - Schéma relationnel normalisé (3NF)
+   - Base de données SQLite opérationnelle
+   - Requêtes SQL répondant aux 12 besoins métier
+• Bénéfices : Suivi du prix au m², identification des marchés porteurs
+2
+ppt/slides/slide3.xml
+La stratégie de sauvegarde et la conformité RGPD
+3
+ TRANSFORMATION DES DONNÉES :
+•
+Nettoyage
+ : suppression des
+doublons
+, gestion des
+valeurs
+
+nulles
+•
+Normalisation
+ : conversion des types (VARCHAR, INTEGER, DECIMAL, DATE)
+• Structuration :
+création
+ des
+clés
+
+primaires
+ et
+étrangères
+•
+Vérification
+ :
+contrôle
+ de
+l'intégrité
+
+référentielle
+ CONFORMITÉ RGPD :
+•
+Aucune
+ donnée
+personnelle
+ nominative
+stockée
+• Données issues de sources
+publiques
+ (DVF -
+Demandes
+ de
+Valeurs
+
+Foncières
+)
+• Principe de
+minimisation
+
+respecté
+ SAUVEGARDE : Base SQLite (
+fichier
+ unique), export CSV possible
+ppt/slides/slide4.xml
+Les données initiales
+4
+📁 FICHIERS SOURCES UTILISÉS :
+• bien.csv →
+Caractéristiques
+ des
+biens
+ (
+33918
+lignes
+)
+• mutation.csv → Transactions
+immobilières
+ (
+33918
+lignes
+)
+• commune.csv →
+Référentiel
+ des communes (
+3125
+
+lignes
+)
+• departement.csv →
+Référentiel
+ des
+départements
+ (10
+8
+
+lignes
+)
+• region.csv →
+Référentiel
+ des
+régions
+ (1
+9
+
+lignes
+)
+• type_local.csv → Types de
+biens
+ : Maison, Appartement, etc. (
+2
+
+lignes
+)
+📊 PÉRIODE : 1er
+semestre
+ 2020 (01/01/2020 - 30/06/2020)
+🛠️ OUTILS : Excel/Power Query pour la
+préparation
+ des données
+,
+SQLiteStudio
+ppt/slides/slide5.xml
+L’extrait du dictionnaire des données
+5
+ppt/slides/slide6.xml
+Le schéma relationnel normalisé
+6
+ppt/slides/slide7.xml
+La base de données avec les tables créées et les données chargées
+7
+ BASE DE DONNÉES :
+DataImmo
+ (SQLite 3)
+TABLES CRÉÉES :
+• bien (6
+colonnes
+) -
+Caractéristiques
+ des
+biens
+• commune (6
+colonnes
+) -
+Référentiel
+
+géographique
+ local
+•
+departement
+ (3
+colonnes
+) -
+Référentiel
+
+départemental
+• mutation (9
+colonnes
+) - Transactions
+immobilières
+• region (2
+colonnes
+) -
+Référentiel
+
+régional
+•
+type_local
+ (2
+colonnes
+) - Types de
+biens
+🛠️ OUTIL : DB Browser for SQLite
+ppt/slides/slide8.xml
+Les requêtes ou screenshot qui permettent de démontrer le bon chargement des données
+8
+SELECT
+code_commune
+, COUNT(*) FROM commune GROUP BY
+code_commune
+ HAVING COUNT(*) > 1;
+
+→
+Résultat
+ : AUCUN
+doublon
+
+détecté
+ ✓
+SELECT COUNT(DISTINCT
+code_commune
+) FROM commune; →
+3125
+communes ✓
+SELECT COUNT(DISTINCT
+code_departement
+) FROM commune; →
+96
+
+départements
+ ✓
+SELECT
+m.id_mutation
+, FROM mutation m, LEFT JOIN commune c ON
+m.code_commune
+ =
+c.code_commune
+, WHERE
+c.code_commune
+ IS NULL; → 0 ligne → toutes les mutations sont valides ✓
+SELECT
+b.id_mutation
+, FROM bien b, LEFT JOIN mutation m ON
+b.id_mutation
+ =
+m.id_mutation
+, WHERE
+m.id_mutation
+ IS NULL; → 0 ligne → tous les biens sont liés à une mutation valide ✓
+ CONCLUSION :
+Données bien chargées
+Clés primaires / étrangères respectées
+Intégrité référentielle validée
+Base prête pour les requêtes analytiques
+ppt/slides/slide9.xml
+Requêtes SQL et résultats
+ppt/slides/slide10.xml
+Requête 1
+10
+Nombre total d'appartements vendus au S1 2020
+SELECT COUNT(b.id_mutation) AS nombre_total_appartements_vendus
+ FROM bien b
+ JOIN mutation m ON b.id_mutation = m.id_mutation
+ JOIN type_local tl ON b.code_type_local = tl.code_type_local
+ WHERE tl.libelle_type_local = 'Appartement'
+ AND m.date_mutation BETWEEN '2020-01-01' AND '2020-06-30';
+📊 RÉSULTAT
+31 155
+appartements vendus
+💡 ANALYSE
+• Le marché de l'appartement représente le cœur du volume des transactions.
+• Le S1 2020 reste dynamique malgré le contexte du début d’année.
+ppt/slides/slide11.xml
+Requête 2
+11
+Nombre de ventes d'appartement par région
+SELECT r.nom_region, COUNT(*) AS nombre_ventes_appartements
+ FROM bien b JOIN mutation m ON b.id_mutation = m.id_mutation
+ JOIN type_local tl ON b.code_type_local = tl.code_type_local
+ JOIN commune c ... JOIN departement d ... JOIN region r ...
+ WHERE tl.libelle_type_local = 'Appartement' AND m.date_mutation BETWEEN '2020-01-01' AND '2020-06-30'
+ GROUP BY r.nom_region ORDER BY nombre_ventes_appartements DESC;
+📊 TOP 5 RÉGIONS
+💡 ANALYSE
+45%
+ des ventes en Île-de-France
+• L’Île-de-France concentre près de la moitié des ventes.
+• Les régions urbaines montrent une forte attractivité résidentielle.
+Region
+
+
+ Nombre vente appartements
+Ile-de-France			13995
+Provence-Alpes-Côte d'Azur		3649
+Auvergne-Rhône-Alpes		3253
+Nouvelle-Aquitaine		1932
+Occitanie			1640
+ppt/slides/slide12.xml
+Requête 3
+12
+Proportion des ventes par nombre de pièces
+SELECT b.nombre_pieces_principales AS nombre_pieces, COUNT(*) AS nombre_ventes,
+ ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM bien b2 JOIN mutation m2 ...
+ WHERE tl2.libelle_type_local = 'Appartement'), 2) AS proportion_pourcentage
+ FROM bien b JOIN mutation m ... WHERE tl.libelle_type_local = 'Appartement'
+ GROUP BY b.nombre_pieces_principales ORDER BY b.nombre_pieces_principales;
+• 2 pièces : 31.16 %
+• 3 pièces : 28.54 %
+• 1 pièce : 21.52 %
+• 4 pièces :
+14.21
+ %
+📊 RÉPARTITION
+💡 ANALYSE
+• Le marché est dominé par les petites surfaces (1–3 pièces).
+• Cela reflète majoritairement un marché urbain et locatif.
+ppt/slides/slide13.xml
+Requête 4
+13
+Top 10 départements - Prix au m² le plus élevé
+SELECT d.code_departement, d.nom_departement,
+ ROUND(AVG(m.valeur_fonciere / b.surface_reelle_bati), 2) AS prix_m2_moyen, COUNT(*) AS nombre_ventes
+ FROM bien b JOIN mutation m ... JOIN commune c ... JOIN departement d ...
+ WHERE b.surface_reelle_bati > 0 AND m.valeur_fonciere > 0
+ GROUP BY d.code_departement ORDER BY prix_m2_moyen DESC LIMIT 10;
+1. Paris (75) : 12 121 €/m²
+2. Hauts-de-Seine (92) : 7 415 €/m²
+3. Val-de-Marne (94) : 5 395 €/m²
+📊 TOP 3
+💡 ANALYSE
+Paris:
+12 122 €/m²
+Écart significatif entre Paris et le reste. 7 départements d'Île-de-France dans le Top 10.
+ppt/slides/slide14.xml
+Requête 5
+14
+Prix moyen du m² d'une maison en Île-de-France
+SELECT r.nom_region,
+ ROUND(AVG(m.valeur_fonciere / b.surface_reelle_bati), 2) AS prix_m2_moyen_maison,
+ COUNT(*) AS nombre_maisons
+ FROM bien b JOIN mutation m ... JOIN type_local tl ... JOIN commune c ... JOIN departement d ... JOIN region r
+ WHERE tl.libelle_type_local = 'Maison' AND r.nom_region = 'Ile-de-France'
+ AND b.surface_reelle_bati > 0 AND m.valeur_fonciere > 0 GROUP BY r.nom_region;
+📊 RÉSULTAT
+3 997,71 €
+prix moyen au m²
+1 059
+maisons vendues
+💡 ANALYSE
+Le prix des maisons en Île-de-France reste
+3x inférieur
+ au prix des appartements parisiens.
+Cela s'explique par la localisation en grande couronne et la surface plus importante des maisons.
+ppt/slides/slide15.xml
+Requête 6
+15
+Top 10 des appartements les plus chers
+SELECT m.valeur_fonciere AS prix_vente, b.surface_reelle_bati AS surface_m2, b.nombre_pieces_principales,
+ c.nom_commune, d.nom_departement, r.nom_region, m.date_mutation
+ FROM bien b JOIN mutation m ... JOIN type_local tl ... LEFT JOIN commune c ... LEFT JOIN departement d ... LEFT JOIN region r
+ WHERE tl.libelle_type_local = 'Appartement' AND m.valeur_fonciere > 0 ORDER BY m.valeur_fonciere DESC LIMIT 10;
+• 355 680 € — Antibes, 40 m²
+• 298 100 € — Marseille 8e, 70 m²
+• 229 500 € — Nice, 82 m²
+📊 TOP 3 APPARTEMENTS
+💡 ANALYSE
+Dominance de la region Provence-Alpes-Côte d'Azur (
+PACA)
+ dans le top 10.
+Note: Ce sont les premières ventes de 2020 (02/01). Les ventes parisiennes arrivent plus tard dans le semestre.
+ppt/slides/slide16.xml
+Requête 7
+16
+Évolution des ventes entre T1 et T2 2020
+WITH ventes_q1 AS (SELECT COUNT(*) AS nb_ventes_q1 FROM mutation WHERE date_mutation BETWEEN '2020-01-01' AND '2020-03-31'),
+ ventes_q2 AS (SELECT COUNT(*) AS nb_ventes_q2 FROM mutation WHERE date_mutation BETWEEN '2020-04-01' AND '2020-06-30')
+ SELECT q1.nb_ventes_q1, q2.nb_ventes_q2, q2.nb_ventes_q2 - q1.nb_ventes_q1 AS difference_absolue,
+ ROUND(((q2.nb_ventes_q2 - q1.nb_ventes_q1) * 100.0 / q1.nb_ventes_q1), 2) AS taux_evolution_pourcentage
+ FROM ventes_q1 q1, ventes_q2 q2;
+📊 RÉSULTATS
+T1 2020
+16 639
+ventes
+T2 2020
+17 279
+ventes
++3,85%
++640 ventes
+💡 ANALYSE
+Contrairement aux attentes,
+légère hausse
+ du nombre de ventes entre T1 et T2.
+Le confinement (17 mars - 11 mai) a décalé les transactions mais le rattrapage au T2 a compensé. Effet de rebond post-confinement.
+ppt/slides/slide17.xml
+Requête 8
+17
+Classement régions - Prix/m² appartements > 4 pièces
+SELECT r.nom_region, ROUND(AVG(m.valeur_fonciere / b.surface_reelle_bati), 2) AS prix_m2_moyen, COUNT(*) AS nombre_ventes
+ FROM bien b JOIN mutation m ... JOIN type_local tl ... JOIN commune c ... JOIN departement d ... JOIN region r
+ WHERE tl.libelle_type_local = 'Appartement' AND b.nombre_pieces_principales > 4
+ AND b.surface_reelle_bati > 0 AND m.valeur_fonciere > 0 GROUP BY r.nom_region ORDER BY prix_m2_moyen DESC;
+• Île-de-France : 8 003 €/m²
+• La Réunion : 3 659 €/m²
+• PACA : 3 005 €/m²
+📊 CLASSEMENT RÉGIONAL
+💡 ANALYSE
+L'Île
+-de-France (
+IdF
+) domine avec un écart de
+2,6x
+ par rapport à PACA.
+Les grands appartements (>4p) sont un marché de niche avec peu de volume hors IdF.
+ppt/slides/slide18.xml
+Requête 9
+18
+Communes avec 50+ ventes au T1 2020
+SELECT c.nom_commune AS commune, d.nom_departement AS departement, COUNT(*) AS nombre_ventes_q1
+ FROM mutation m JOIN commune c ON m.code_commune = c.code_commune
+ JOIN departement d ON c.code_departement = d.code_departement
+ WHERE m.date_mutation BETWEEN '2020-01-01' AND '2020-03-31'
+ GROUP BY c.code_commune HAVING COUNT(*) >= 50 ORDER BY c.nom_commune;
+• Paris 15e : 215 ventes
+• Nice : 173 ventes
+• Bordeaux : 157 ventes
+📊 TOP COMMUNES
+💡 ANALYSE
+20 arrondissements
+ de Paris dans le Top 47.
+• Les grandes communes urbaines génèrent la majorité des transactions :
+Paris, Nice, Bordeaux, Nantes, Lyon.
+Ce sont les zones prioritaires pour un futur modèle prédictif.
+ppt/slides/slide19.xml
+Requête 10
+19
+Différence de prix/m² entre 2 et 3 pièces
+WITH prix_2pieces AS (SELECT AVG(m.valeur_fonciere / b.surface_reelle_bati) AS prix_m2_2p FROM bien b JOIN mutation m ...),
+ prix_3pieces AS (SELECT AVG(m.valeur_fonciere / b.surface_reelle_bati) AS prix_m2_3p FROM bien b JOIN mutation m ...)
+ SELECT ROUND(p2.prix_m2_2p, 2) AS prix_moyen_2p, ROUND(p3.prix_m2_3p, 2) AS prix_moyen_3p,
+ ROUND(p2.prix_m2_2p - p3.prix_m2_3p, 2) AS difference,
+ ROUND((p2.prix_m2_2p - p3.prix_m2_3p) * 100.0 / p3.prix_m2_3p, 2) AS difference_pourcentage FROM prix_2pieces p2, prix_3pieces p3;
+📊 COMPARAISON
+2 pièces
+4 934 €
+par m²
+3 pièces
+4 293 €
+par m²
++14,93%
+Différence: +641 €/m²
+💡 ANALYSE
+Les
+2 pièces sont 15% plus chers
+ au m² que les 3 pièces.
+Cela s'explique par une demande plus forte pour les petites surfaces (investissement locatif, primo-accédants).
+ppt/slides/slide20.xml
+Requête 11
+20
+Top 3 communes par département (06, 13, 33, 59, 69)
+WITH classement_communes AS (SELECT c.nom_commune, d.code_departement, d.nom_departement,
+ AVG(m.valeur_fonciere) AS valeur_fonciere_moyenne, COUNT(*) AS nombre_ventes,
+ ROW_NUMBER() OVER (PARTITION BY d.code_departement ORDER BY AVG(m.valeur_fonciere) DESC) AS rang
+ FROM bien b JOIN mutation m ... WHERE d.code_departement IN ('06','13','33','59','69') GROUP BY c.code_commune)
+ SELECT * FROM classement_communes WHERE rang <= 3 ORDER BY code_departement, rang;
+• 06 — Saint-Jean-Cap-
+Ferrat
+ : 968 750 €
+• 13 — Gignac-la-
+Nerthe
+ : 330 000 €
+• 33 —
+Lège
+-Cap-Ferret : 549 500 €
+📊 TOP 3 PAR DÉPARTEMENT
+• Les communes les plus chères sont systématiquement littorales ou haut de gamme.
+• Ce sont des marchés très spécifiques, à faible volume mais à forte valeur.
+💡 ANALYSE:
+ppt/slides/slide21.xml
+Requête 12
+21
+Top 20 communes - Transactions pour 1000 habitants
+SELECT c.nom_commune AS commune, c.population_totale AS population, COUNT(*) AS nombre_transactions,
+ ROUND((COUNT(*) * 1000.0) / c.population_totale, 2) AS transactions_pour_1000_habitants
+ FROM bien b JOIN mutation m ON b.id_mutation = m.id_mutation LEFT JOIN commune c ON m.code_commune = c.code_commune
+ WHERE m.date_mutation BETWEEN '2020-01-01' AND '2020-06-30'
+ GROUP BY c.code_commune ORDER BY transactions_pour_1000_habitants DESC LIMIT 20;
+• Germ : 55.56
+•
+Chamrousse
+ : 36.41
+• Isola : 33.08
+•
+Villers-sur-Mer : 28.45
+•
+Eaux-Bonnes : 25.51
+📊 TOP COMMUNES
+💡 ANALYSE
+Dominance des
+stations balnéaires et de ski
+.
+Chamrousse, Isola, Allos = stations de ski
+Villers-sur-Mer, Houlgate = côte normande
+• Certaines petites communes ont une activité très intense, souvent liées au tourisme.
+• Le ratio par habitant révèle des marchés très dynamiques malgré une faible population.
+ppt/slides/slide22.xml
+Merci !
+ppt/notesSlides/notesSlide1.xml
+1
+ppt/notesSlides/notesSlide2.xml
+2
+ppt/notesSlides/notesSlide3.xml
+3
+ppt/notesSlides/notesSlide4.xml
+4
+ppt/notesSlides/notesSlide5.xml
+5
+ppt/notesSlides/notesSlide6.xml
+6
+ppt/notesSlides/notesSlide7.xml
+7
+ppt/notesSlides/notesSlide8.xml
+8
+ppt/notesSlides/notesSlide9.xml
+9
+ppt/notesSlides/notesSlide10.xml
+10
+ppt/notesSlides/notesSlide11.xml
+11
+ppt/notesSlides/notesSlide12.xml
+12
+ppt/notesSlides/notesSlide13.xml
+13
+ppt/notesSlides/notesSlide14.xml
+14
+ppt/notesSlides/notesSlide15.xml
+15
+ppt/notesSlides/notesSlide16.xml
+16
+ppt/notesSlides/notesSlide17.xml
+17
+ppt/notesSlides/notesSlide18.xml
+18
+ppt/notesSlides/notesSlide19.xml
+19
+ppt/notesSlides/notesSlide20.xml
+20
+ppt/notesSlides/notesSlide21.xml
+21
+ppt/notesSlides/notesSlide22.xml
+22

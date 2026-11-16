@@ -1,0 +1,393 @@
+EXTRAITS DES LIVRABLES ORIGINAUX
+Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une nouvelle exécution des tests ou des traitements.
+
+SOURCE : process_tickets.py
+"""
+process_tickets.py
+-------------------
+Ce script PySpark :
+1. Se connecte à Redpanda (compatible protocole Kafka) et lit en continu
+   (streaming) les messages du topic "client_tickets".
+2. Parse le JSON de chaque ticket selon un schéma strict.
+3. Calcule plusieurs statistiques utiles (agrégations) :
+   - nombre de tickets par catégorie
+   - nombre de tickets par priorité
+   - nombre de tickets par équipe
+   - nombre de tickets par canal
+   - nombre de tickets par fenêtre de temps (5 minutes glissantes)
+4. Écrit :
+   - les tickets bruts (nettoyés) au format Parquet
+   - les résultats d'agrégation au format Parquet
+   dans le dossier /app/output (monté en volume vers ./output sur la machine hôte).
+
+Le script est conçu pour être résilient : en cas de redémarrage, Spark
+reprend grâce aux "checkpoints" (répertoire de reprise sur erreur).
+"""
+
+import logging
+import os
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import (
+    col, from_json, window, count, current_timestamp, to_timestamp
+)
+from pyspark.sql.types import (
+    StructType, StructField, StringType, IntegerType
+)
+
+# ---------------------------------------------------------------------------
+# 1. Configuration (via variables d'environnement, avec valeurs par défaut)
+# ---------------------------------------------------------------------------
+BOOTSTRAP_SERVERS = os.getenv("REDPANDA_BOOTSTRAP_SERVERS", "redpanda:9092")
+TOPIC_NAME = os.getenv("TOPIC_NAME", "client_tickets")
+OUTPUT_PATH = os.getenv("OUTPUT_PATH", "/app/output")
+CHECKPOINT_PATH = os.getenv("CHECKPOINT_PATH", "/app/output/_checkpoints")
+TRIGGER_INTERVAL = os.getenv("TRIGGER_INTERVAL", "30 seconds")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+)
+logger = logging.getLogger("spark_tickets")
+
+
+# ---------------------------------------------------------------------------
+# 2. Schéma des tickets (doit correspondre exactement à ce qu'envoie
+#    producer.py). Un schéma explicite évite les erreurs silencieuses et
+#    rend le pipeline plus robuste (Point de vigilance : "gestion des erreurs").
+# ---------------------------------------------------------------------------
+TICKET_SCHEMA = StructType([
+    StructField("ticket_id", StringType(), True),
+    StructField("client_id", IntegerType(), True),
+    StructField("client_name", StringType(), True),
+    StructField("category", StringType(), True),
+    StructField("priority", StringType(), True),
+    StructField("subject", StringType(), True),
+    StructField("description", StringType(), True),
+    StructField("team", StringType(), True),
+    StructField("channel", StringType(), True),
+    StructField("status", StringType(), True),
+    StructField("created_at", StringType(), True),
+])
+
+
+def build_spark_session() -> SparkSession:
+    """
+    Crée la session Spark.
+    - spark.sql.shuffle.partitions est volontairement réduit (par défaut 200)
+      car ce projet tourne sur une petite machine locale : moins de
+      partitions = moins d'overhead (Point de vigilance : "performance"
+      et "partitions").
+    """
+    return (
+        SparkSession.builder
+        .appName("ClientTicketsProcessing")
+        .config("spark.sql.shuffle.partitions", "4")
+        .config("spark.streaming.stopGracefullyOnShutdown", "true")
+        .getOrCreate()
+    )
+
+
+def read_from_redpanda(spark: SparkSession):
+    """
+    Lit le flux Kafka/Redpanda en streaming.
+    - startingOffsets=earliest : on lit depuis le début du topic au premier
+      lancement (utile pour la démo / le POC).
+    - failOnDataLoss=false : évite que le job plante si un offset a expiré
+      (résilience).
+    """
+    return (
+        spark.readStream
+        .format("kafka")
+        .option("kafka.bootstrap.servers", BOOTSTRAP_SERVERS)
+        .option("subscribe", TOPIC_NAME)
+        .option("startingOffsets", "earliest")
+        .option("failOnDataLoss", "false")
+        .load()
+    )
+
+
+def parse_tickets(raw_df):
+    """Transforme les messages Kafka bruts (bytes) en colonnes exploitables."""
+    parsed = (
+        raw_df
+        .selectExpr("CAST(value AS STRING) AS json_value", "timestamp AS kafka_timestamp")
+        .withColumn("data", from_json(col("json_value"), TICKET_SCHEMA))
+        .select("data.*", "kafka_timestamp")
+        .withColumn("created_at_ts", to_timestamp(col("created_at")))
+        .withColumn("processing_time", current_timestamp())
+    )
+    return parsed
+
+
+def write_raw_tickets(parsed_df):
+    """Écrit les tickets nettoyés en Parquet (append), partitionnés par catégorie."""
+    return (
+        parsed_df.writeStream
+        .format("parquet")
+        .option("path", f"{OUTPUT_PATH}/tickets_parquet")
+        .option("checkpointLocation", f"{CHECKPOINT_PATH}/tickets_raw")
+        .partitionBy("category")
+        .outputMode("append")
+        .trigger(processingTime=TRIGGER_INTERVAL)
+        .start()
+    )
+
+
+def write_windowed_counts(parsed_df):
+    """
+    Calcule le nombre de tickets créés par fenêtre glissante de 5 minutes.
+    Watermark de 10 minutes : Spark tolère des données en retard jusqu'à
+    10 minutes avant de considérer la fenêtre comme définitivement close
+    (Point de vigilance : "résilience" face aux données tardives).
+    """
+    windowed = (
+        parsed_df
+        .withWatermark("created_at_ts", "10 minutes")
+        .groupBy(window(col("created_at_ts"), "5 minutes"))
+        .agg(count("*").alias("ticket_count"))
+    )
+    return (
+        windowed.writeStream
+        .format("parquet")
+        .option("path", f"{OUTPUT_PATH}/tickets_by_time_window")
+        .option("checkpointLocation", f"{CHECKPOINT_PATH}/tickets_by_time_window")
+        .outputMode("append")
+        .trigger(processingTime=TRIGGER_INTERVAL)
+        .start()
+    )
+
+
+def main():
+    logger.info("Démarrage du job PySpark de traitement des tickets clients...")
+    spark = build_spark_session()
+    spark.sparkContext.setLogLevel("WARN")
+
+    raw_df = read_from_redpanda(spark)
+    parsed_df = parse_tickets(raw_df)
+
+    queries = []
+
+    # 1. Sauvegarde des tickets bruts (nettoyés) — utile pour toute analyse ultérieure
+    queries.append(write_raw_tickets(parsed_df))
+
+    # 2. Agrégations "simples" (sans fenêtre de temps) via foreachBatch,
+    #    car Parquet ne gère pas bien l'outputMode "complete" en direct :
+    #    on utilise donc une écriture par micro-batch (plus robuste).
+    def foreach_batch_aggregations(batch_df, batch_id):
+        if batch_df.rdd.isEmpty():
+            return
+        batch_df.persist()
+
+        by_category = batch_df.groupBy("category").agg(count("*").alias("ticket_count"))
+        by_priority = batch_df.groupBy("priority").agg(count("*").alias("ticket_count"))
+        by_team = batch_df.groupBy("team").agg(count("*").alias("ticket_count"))
+        by_channel = batch_df.groupBy("channel").agg(count("*").alias("ticket_count"))
+
+        by_category.write.mode("append").parquet(f"{OUTPUT_PATH}/agg_by_category")
+        by_priority.write.mode("append").parquet(f"{OUTPUT_PATH}/agg_by_priority")
+        by_team.write.mode("append").parquet(f"{OUTPUT_PATH}/agg_by_team")
+        by_channel.write.mode("append").parquet(f"{OUTPUT_PATH}/agg_by_channel")
+
+        logger.info("Batch %s : agrégations écrites avec succès (%s lignes).",
+                    batch_id, batch_df.count())
+        batch_df.unpersist()
+
+    agg_query = (
+        parsed_df.writeStream
+        .foreachBatch(foreach_batch_aggregations)
+        .option("checkpointLocation", f"{CHECKPOINT_PATH}/aggregations")
+        .trigger(processingTime=TRIGGER_INTERVAL)
+        .start()
+    )
+    queries.append(agg_query)
+
+    # 3. Agrégation par fenêtre de temps glissante (5 minutes)
+    queries.append(write_windowed_counts(parsed_df))
+
+    logger.info("Toutes les requêtes de streaming sont démarrées. En attente des données...")
+
+    for q in queries:
+        q.awaitTermination()
+
+
+if __name__ == "__main__":
+    main()
+
+
+SOURCE : producer.py
+"""
+producer.py
+------------
+Ce script génère des tickets clients réalistes et les envoie dans le topic
+Redpanda "client_tickets".
+
+Il tourne en boucle : toutes les X secondes, il crée un nouveau ticket
+et l'envoie au format JSON.
+
+Champs générés pour chaque ticket :
+- ticket_id      : identifiant unique du ticket
+- client_id      : identifiant du client
+- client_name    : nom du client (donnée fictive, générée avec Faker)
+- category       : catégorie du problème (facturation, technique, livraison, etc.)
+- priority       : priorité du ticket (basse, moyenne, haute, critique)
+- subject        : sujet court du ticket
+- description    : description plus longue du problème
+- team           : équipe assignée pour traiter le ticket
+- channel        : canal par lequel le ticket est arrivé (email, téléphone, chat, réseau social)
+- status         : statut initial du ticket (toujours "open" à la création)
+- created_at     : date et heure de création du ticket (ISO 8601)
+"""
+
+import json
+import logging
+import os
+import random
+import time
+import uuid
+from datetime import datetime, timezone
+
+from confluent_kafka import Producer
+from faker import Faker
+
+# ---------------------------------------------------------------------------
+# 1. Configuration du logging
+#    -> Permet de voir dans la console ce que fait le script, et de garder
+#       une trace en cas de problème (Point de vigilance : "Logging").
+# ---------------------------------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+)
+logger = logging.getLogger("producer")
+
+fake = Faker("fr_FR")
+
+# ---------------------------------------------------------------------------
+# 2. Configuration Kafka / Redpanda
+#    BOOTSTRAP_SERVERS est lu depuis une variable d'environnement pour rester
+#    flexible : dans Docker Compose, ce sera "redpanda:9092" (nom du service).
+#    En local (hors Docker), ce serait "localhost:19092".
+# ---------------------------------------------------------------------------
+BOOTSTRAP_SERVERS = os.getenv("REDPANDA_BOOTSTRAP_SERVERS", "redpanda:9092")
+TOPIC_NAME = os.getenv("TOPIC_NAME", "client_tickets")
+PRODUCE_INTERVAL_SECONDS = float(os.getenv("PRODUCE_INTERVAL_SECONDS", "1.5"))
+
+CATEGORIES = ["Facturation", "Technique", "Livraison", "Compte client", "Réclamation", "Information"]
+PRIORITIES = ["basse", "moyenne", "haute", "critique"]
+TEAMS = ["Support N1", "Support N2", "Equipe Facturation", "Equipe Logistique", "Equipe Technique"]
+CHANNELS = ["email", "téléphone", "chat", "réseau social", "formulaire web"]
+
+
+def build_producer_config() -> dict:
+    """
+    Construit la configuration du producteur Kafka/Redpanda.
+
+    - bootstrap.servers : adresse du/des broker(s) Redpanda
+    - client.id         : nom logique de ce producteur (utile pour le debug)
+    - retries           : nombre de tentatives en cas d'échec d'envoi
+                          (Point de vigilance : "résilience")
+    - acks              : "all" = on attend la confirmation complète du broker
+                          avant de considérer le message comme envoyé (fiabilité maximale)
+    """
+    return {
+        "bootstrap.servers": BOOTSTRAP_SERVERS,
+        "client.id": "ticket-producer",
+        "retries": 5,
+        "retry.backoff.ms": 1000,
+        "acks": "all",
+    }
+
+
+def delivery_report(err, msg):
+    """
+    Callback appelé par confluent_kafka après chaque tentative d'envoi.
+    Permet de savoir si le message a bien été livré au broker Redpanda,
+    ou s'il y a eu une erreur (Point de vigilance : "gestion des erreurs").
+    """
+    if err is not None:
+        logger.error("Échec de livraison du message : %s", err)
+    else:
+        logger.info(
+            "Ticket livré -> topic=%s partition=%s offset=%s",
+            msg.topic(), msg.partition(), msg.offset(),
+        )
+
+
+def generate_ticket() -> dict:
+    """Génère un ticket client fictif mais réaliste."""
+    now = datetime.now(timezone.utc)
+    return {
+        "ticket_id": str(uuid.uuid4()),
+        "client_id": random.randint(1000, 9999),
+        "client_name": fake.name(),
+        "category": random.choice(CATEGORIES),
+        "priority": random.choice(PRIORITIES),
+        "subject": fake.sentence(nb_words=6),
+        "description": fake.paragraph(nb_sentences=3),
+        "team": random.choice(TEAMS),
+        "channel": random.choice(CHANNELS),
+        "status": "open",
+        "created_at": now.isoformat(),
+    }
+
+
+def create_producer_with_retry(max_attempts: int = 10, wait_seconds: int = 5) -> Producer:
+    """
+    Tente de se connecter à Redpanda plusieurs fois avant d'abandonner.
+    Utile car, au démarrage de Docker Compose, Redpanda peut mettre quelques
+    secondes à être prêt à accepter des connexions (Point de vigilance :
+    "reconnexion" / "résilience").
+    """
+    attempt = 0
+    while attempt < max_attempts:
+        try:
+            producer = Producer(build_producer_config())
+            # On vérifie que la connexion fonctionne en demandant les métadonnées
+            producer.list_topics(timeout=5)
+            logger.info("Connexion à Redpanda réussie (%s)", BOOTSTRAP_SERVERS)
+            return producer
+        except Exception as exc:  # noqa: BLE001
+            attempt += 1
+            logger.warning(
+                "Impossible de se connecter à Redpanda (tentative %s/%s) : %s",
+                attempt, max_attempts, exc,
+            )
+            time.sleep(wait_seconds)
+    raise RuntimeError("Connexion à Redpanda impossible après plusieurs tentatives.")
+
+
+def main():
+    logger.info("Démarrage du producteur de tickets clients...")
+    producer = create_producer_with_retry()
+
+    try:
+        while True:
+            ticket = generate_ticket()
+            payload = json.dumps(ticket, ensure_ascii=False).encode("utf-8")
+
+            try:
+                producer.produce(
+                    topic=TOPIC_NAME,
+                    key=str(ticket["ticket_id"]).encode("utf-8"),
+                    value=payload,
+                    callback=delivery_report,
+                )
+                # poll() permet de déclencher les callbacks de livraison
+                producer.poll(0)
+            except BufferError:
+                logger.warning("File d'attente pleine, on attend un peu avant de réessayer.")
+                producer.poll(1)
+
+            time.sleep(PRODUCE_INTERVAL_SECONDS)
+
+    except KeyboardInterrupt:
+        logger.info("Arrêt demandé par l'utilisateur.")
+    finally:
+        logger.info("Vidage des messages en attente avant fermeture...")
+        producer.flush(10)
+        logger.info("Producteur arrêté proprement.")
+
+
+if __name__ == "__main__":
+    main()
