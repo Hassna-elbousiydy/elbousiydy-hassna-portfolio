@@ -1,4 +1,4 @@
-EXTRAITS DU NOTEBOOK ORIGINAL — RÉSULTATS CONSERVÉS
+EXTRAITS DU NOTEBOOK ORIGINAL - RÉSULTATS CONSERVÉS
 Source : Elbousiydy_Hassna_1_notebooks_042026.ipynb
 Sélection du 16 novembre 2026. Pas de nouvelle exécution. Les métriques ci-dessous sont sur la cible log-transformée.
 

@@ -168,7 +168,7 @@ def main():
 
     queries = []
 
-    # 1. Sauvegarde des tickets bruts (nettoyés) — utile pour toute analyse ultérieure
+    # 1. Sauvegarde des tickets bruts (nettoyés) - utile pour toute analyse ultérieure
     queries.append(write_raw_tickets(parsed_df))
 
     # 2. Agrégations "simples" (sans fenêtre de temps) via foreachBatch,

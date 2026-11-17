@@ -6,7 +6,7 @@ ppt/slides/slide1.xml
 Pipeline ELT Météo
 GreenAndCoop
 Construire et tester une infrastructure de données
-GreenAndCoop —
+GreenAndCoop -
 Projet
  Forecast
 Hassna
@@ -38,14 +38,14 @@ Format : JSON HTTP
 Armentières, Lille-Lesquin
 Fréquence : toutes les 10–15 min
 Licence : CC BY
-WU — Ichtegem (BE)
+WU - Ichtegem (BE)
 Station amateur
 Format : XLSX local
-Station : IICHTE19 — WeerstationBS
+Station : IICHTE19 - WeerstationBS
 Lat 51.092°N / Lon 2.999°E
 Altitude : 15 m
 Fréquence : toutes les 30 min
-WU — La Madeleine (FR)
+WU - La Madeleine (FR)
 Station amateur
 Format : XLSX local
 Station : ILAMAD25
@@ -85,7 +85,7 @@ les observations finales exploitables proviennent des deux stations
 Weather
  Underground après standardisation et filtrage qualité.
 ppt/slides/slide4.xml
-Architecture locale — Développement (Docker)
+Architecture locale - Développement (Docker)
 Sources
 météo
 JSON + XLSX
@@ -108,7 +108,7 @@ Schéma étoile
 fact + dim
 Schémas PostgreSQL
 raw
-Tables brutes — ingérées par Airbyte, non modifiées
+Tables brutes - ingérées par Airbyte, non modifiées
 staging
 Nettoyage, renommage colonnes, cast types
 intermediate
@@ -118,7 +118,7 @@ Schéma en étoile final (fact + dim_stations + dim_date)
 ppt/slides/slide5.xml
 Architecture
 déployée
- — AWS (Production)
+ - AWS (Production)
 AWS ECR
 Image Docker DBT
 greenandcoop-dbt:latest
@@ -164,7 +164,7 @@ CloudWatch
 .
 ⚠️  Surveiller le billing AWS · Activer les backups RDS · Ne jamais écrire les credentials en dur
 ppt/slides/slide6.xml
-Pipeline ELT — Logigramme du processus
+Pipeline ELT - Logigramme du processus
 Contrôles :
 - Vérification des tables RAW dans RDS
 -
@@ -217,7 +217,7 @@ Airbyte
 Weather
  Underground vers PostgreSQL/RDS.
 ppt/slides/slide8.xml
-Transformations DBT — 3 couches
+Transformations DBT - 3 couches
 Staging
 Fichiers :
 stg_infoclimat_weather.sql
@@ -239,7 +239,7 @@ fact_weather_observations.sql
 dim_weather_stations.sql
 dim_date.sql
 Rôle :
-Schéma en étoile final — tables matérialisées pour l’analyse.
+Schéma en étoile final - tables matérialisées pour l’analyse.
 Les clés et relations sont contrôlées par les tests DBT.
 Exécution
  sur AWS :
@@ -252,7 +252,7 @@ dbt
 aws
  → PASS=24 / ERROR=0
 ppt/slides/slide9.xml
-Schéma analytique en étoile — Couche Marts
+Schéma analytique en étoile - Couche Marts
 FAIT
 fact_weather_observations
 observation_id (PK)
@@ -264,7 +264,7 @@ humidity_pct
 pressure_hpa
 wind_speed_kmh
 source_name
-DIM — Stations
+DIM - Stations
 dim_weather_stations
 station_id (PK)
 station_name
@@ -272,7 +272,7 @@ city
 latitude / longitude
 elevation_m
 network_source
-DIM — Date
+DIM - Date
 dim_date
 date_id (PK)
 full_date
@@ -302,7 +302,7 @@ dim_date
  : 1
 ligne
 ppt/slides/slide10.xml
-Tests qualité des données — DBT
+Tests qualité des données - DBT
 Tests standards (schema.yml)
 ✓
 not_null
@@ -412,7 +412,7 @@ Preuves
 
 d’installation
  AWS
-Amazon RDS — PostgreSQL
+Amazon RDS - PostgreSQL
 Exécution
  DBT sur AWS
 Instance PostgreSQL disponible sur AWS.

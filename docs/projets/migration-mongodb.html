@@ -42,7 +42,7 @@
 </section>
 <section class="case-section" id="decisions">
 <h2 class="serif">Distinguer les responsabilités</h2>
-<p>L’environnement Docker prévoit des comptes applicatif et de migration distincts, un healthcheck et des volumes dédiés. Les privilèges sont ceux des rôles MongoDB configurés. Les tests unittest ciblent parsing et transformation ; certains tests d’intégration nécessitent une base disponible.</p>
+<p>L’environnement Docker prévoit des comptes applicatif et de migration distincts, un healthcheck et des volumes dédiés. Les privilèges sont ceux des rôles MongoDB configurés. Les tests unittest ciblent parsing et transformation ; les tests d’intégration sont ignorés automatiquement si MongoDB n’est pas disponible. Un succès de la suite unitaire ne prouve donc pas à lui seul la validation sur une base réelle.</p>
 </section>
 <section class="case-section" id="resultats">
 <h2 class="serif">Vérifier avant et après</h2>

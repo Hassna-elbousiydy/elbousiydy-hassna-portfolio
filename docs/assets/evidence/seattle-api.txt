@@ -6,7 +6,7 @@ SOURCE : Elbousiydy_Hassna_3_service_042026.py
 
 # ============================================================
 
-# Service BentoML — API de prédiction de consommation énergétique
+# Service BentoML - API de prédiction de consommation énergétique
 
 # ============================================================
 
@@ -480,7 +480,7 @@ SOURCE : test_api.py
 
 # ============================================================
 
-# Tests de l'API en local — à exécuter PENDANT que bentoml serve tourne
+# Tests de l'API en local - à exécuter PENDANT que bentoml serve tourne
 
 # Prérequis : pip install requests
 
@@ -504,7 +504,7 @@ BASE_URL = 'http://localhost:3000'
 
 def test_valid_building():
 
-    """Test 1 : bâtiment valide — doit retourner une prédiction."""
+    """Test 1 : bâtiment valide - doit retourner une prédiction."""
 
     payload = {
 
@@ -552,7 +552,7 @@ def test_valid_building():
 
 def test_invalid_year():
 
-    """Test 2 : YearBuilt invalide — doit retourner 400 ou 422."""
+    """Test 2 : YearBuilt invalide - doit retourner 400 ou 422."""
 
     payload = {
 
@@ -582,7 +582,7 @@ def test_invalid_year():
 
     # BentoML peut retourner 400 ou 422 selon la version
 
-    assert r.status_code in [400, 422], f'ÉCHEC — reçu {r.status_code}, attendu 400 ou 422'
+    assert r.status_code in [400, 422], f'ÉCHEC - reçu {r.status_code}, attendu 400 ou 422'
 
     print('✓ PASSÉ (Validation rejetée correctement)\n')
 
@@ -592,7 +592,7 @@ def test_invalid_year():
 
 def test_invalid_surface():
 
-    """Test 3 : Surface incohérente — doit retourner 400 ou 422."""
+    """Test 3 : Surface incohérente - doit retourner 400 ou 422."""
 
     payload = {
 
@@ -620,7 +620,7 @@ def test_invalid_surface():
 
     print(f'Status: {r.status_code}')
 
-    assert r.status_code in [400, 422], f'ÉCHEC — reçu {r.status_code}, attendu 400 ou 422'
+    assert r.status_code in [400, 422], f'ÉCHEC - reçu {r.status_code}, attendu 400 ou 422'
 
     print('✓ PASSÉ (Validation rejetée correctement)\n')
 

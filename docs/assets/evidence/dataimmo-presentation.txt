@@ -341,9 +341,9 @@ SELECT m.valeur_fonciere AS prix_vente, b.surface_reelle_bati AS surface_m2, b.n
  c.nom_commune, d.nom_departement, r.nom_region, m.date_mutation
  FROM bien b JOIN mutation m ... JOIN type_local tl ... LEFT JOIN commune c ... LEFT JOIN departement d ... LEFT JOIN region r
  WHERE tl.libelle_type_local = 'Appartement' AND m.valeur_fonciere > 0 ORDER BY m.valeur_fonciere DESC LIMIT 10;
-• 355 680 € — Antibes, 40 m²
-• 298 100 € — Marseille 8e, 70 m²
-• 229 500 € — Nice, 82 m²
+• 355 680 € - Antibes, 40 m²
+• 298 100 € - Marseille 8e, 70 m²
+• 229 500 € - Nice, 82 m²
 📊 TOP 3 APPARTEMENTS
 💡 ANALYSE
 Dominance de la region Provence-Alpes-Côte d'Azur (
@@ -444,13 +444,13 @@ WITH classement_communes AS (SELECT c.nom_commune, d.code_departement, d.nom_dep
  ROW_NUMBER() OVER (PARTITION BY d.code_departement ORDER BY AVG(m.valeur_fonciere) DESC) AS rang
  FROM bien b JOIN mutation m ... WHERE d.code_departement IN ('06','13','33','59','69') GROUP BY c.code_commune)
  SELECT * FROM classement_communes WHERE rang <= 3 ORDER BY code_departement, rang;
-• 06 — Saint-Jean-Cap-
+• 06 - Saint-Jean-Cap-
 Ferrat
  : 968 750 €
-• 13 — Gignac-la-
+• 13 - Gignac-la-
 Nerthe
  : 330 000 €
-• 33 —
+• 33 -
 Lège
 -Cap-Ferret : 549 500 €
 📊 TOP 3 PAR DÉPARTEMENT

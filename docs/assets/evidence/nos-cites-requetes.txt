@@ -3,8 +3,8 @@ Sélection documentaire du 16 novembre 2026. Ces extraits ne constituent pas une
 
 SOURCE : Script_MongoDB_Partie2.js
 // ============================================================
-// PROJET 7 — NosCités | Partie 2 : Analyse de la base NoSQL
-// Script MongoDB (mongosh) — Toutes les requêtes documentées
+// PROJET 7 - NosCités | Partie 2 : Analyse de la base NoSQL
+// Script MongoDB (mongosh) - Toutes les requêtes documentées
 // Association NosCités | Dataset: listings_Paris.csv
 // Scraping: juin 2024 | 95 885 documents
 // ============================================================
@@ -14,7 +14,7 @@ SOURCE : Script_MongoDB_Partie2.js
 // use noscites
 
 // ============================================================
-// SECTION A — REQUÊTES SIMPLES (Étape 1)
+// SECTION A - REQUÊTES SIMPLES (Étape 1)
 // ============================================================
 
 // -------------------------------------------------------
@@ -57,15 +57,15 @@ db.listings.find(
 ).sort({ number_of_reviews: -1 }).limit(5);
 
 /* RÉSULTATS ATTENDUS :
-   1. ID 17222007 — "Sweet & cosy room next to Canal Saint Martin ❤️"
+   1. ID 17222007 - "Sweet & cosy room next to Canal Saint Martin ❤️"
       Host: Alexandra | Private room | Entrepôt | 3 067 avis
-   2. ID 26244787 — "Double/Twin Room, close to Opera and the Louvre with breakfast"
+   2. ID 26244787 - "Double/Twin Room, close to Opera and the Louvre with breakfast"
       Host: David | Hotel room | Bourse | 2 620 avis
-   3. ID 41020735 — "Bed in Dorm of 8 Beds "The Big One" in Paris"
+   3. ID 41020735 - "Bed in Dorm of 8 Beds "The Big One" in Paris"
       Host: The People | Shared room | Popincourt | 2 294 avis
-   4. ID 40194697 — "Comfortable bed in shared rooms of 8 in Paris 12e"
+   4. ID 40194697 - "Comfortable bed in shared rooms of 8 in Paris 12e"
       Host: The People Paris Bercy | Shared room | Reuilly | 2 105 avis
-   5. ID 35145338 — "Nice Room for 2 people"
+   5. ID 35145338 - "Nice Room for 2 people"
       Host: Hotel De L'Aqueduc | Hotel room | Entrepôt | 2 048 avis
 */
 
@@ -205,7 +205,7 @@ db.listings.countDocuments({ host_is_superhost: "t" });
 */
 
 // ============================================================
-// SECTION B — REQUÊTES COMPLEXES / AGRÉGATIONS (Étape 2)
+// SECTION B - REQUÊTES COMPLEXES / AGRÉGATIONS (Étape 2)
 // Ces requêtes utilisent le framework d'agrégation MongoDB ($group, $sort, $project, etc.)
 // ============================================================
 
@@ -441,7 +441,7 @@ db.listings.aggregate([
 */
 
 // ============================================================
-// SECTION C — REQUÊTES BONUS / APPROFONDISSEMENT
+// SECTION C - REQUÊTES BONUS / APPROFONDISSEMENT
 // ============================================================
 
 // C1. Distribution des prix (après nettoyage)
@@ -531,8 +531,8 @@ db.listings.getIndexes();
 
 SOURCE : Script_Python_Polars_Partie2.py
 # ============================================================
-# PROJET 7 — NosCités | Partie 2 : Requêtes Complexes
-# Script Python — PyMongo + Polars
+# PROJET 7 - NosCités | Partie 2 : Requêtes Complexes
+# Script Python - PyMongo + Polars
 # Association NosCités | Dataset: listings_Paris.csv
 # ============================================================
 # Installation des dépendances :
@@ -675,4 +675,4 @@ except Exception as e:
     print("   Utiliser l'Option A (CSV direct) pour les analyses.")
 
 print("\n✅ Script terminé avec succès.")
-print("Projet 7 — Association NosCités | Data Engineer | 2024")
+print("Projet 7 - Association NosCités | Data Engineer | 2024")

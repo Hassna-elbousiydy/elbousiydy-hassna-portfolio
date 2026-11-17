@@ -1,0 +1,32 @@
+Bottleneck / Kestra - vérification des sorties conservées
+Revue locale : 16 novembre 2026
+Les fichiers proviennent des exécutions conservées. Le workflow n’a pas été rejoué.
+
+Tâche : export-revenue-total-csv - 12 sorties trouvées
+Fichier : 91366607979375426.csv
+SHA-256 : 532e83a59bdd7c3a7e3df7174f0d851a690d881741075fd3f02dd1f496cf79b1
+Lignes de données : 1
+Chiffre d’affaires global : 70568.6 EUR
+
+Fichier : 8407626184930210021.csv
+SHA-256 : 532e83a59bdd7c3a7e3df7174f0d851a690d881741075fd3f02dd1f496cf79b1
+Lignes de données : 1
+Chiffre d’affaires global : 70568.6 EUR
+
+Tâche : export-merged-csv - 14 sorties trouvées
+Fichier : 8356155647240908994.csv
+SHA-256 : 598969d5e77fc96b8f1e851f0f35004c30b11bd795cecb37aa51f1f0df6b7cf1
+Lignes de données : 714
+
+Fichier : 17514299765761463458.csv
+SHA-256 : 6ac7ce2875a7163afc72d10ed9bba18dec1701cf8d66f5e7f203f6c29be3486e
+Lignes de données : 714
+
+Tâche : compute-zscore - 12 sorties trouvées
+Fichier : 5rSVt3A0igIANCd8WOSDIa-zscore.csv
+SHA-256 : 4933dd471b7e657434855b9c24b2b667ccf6598e7bf07103f3265a0614f58204
+Lignes de données : 714
+
+Fichier : 1JMH6T0QUoGHPLu4xyTg2k-zscore.csv
+SHA-256 : a7e334e8a2d90e0f077b838e4dac7da5beab2ed179f773a4d85e6c4881537639
+Lignes de données : 714

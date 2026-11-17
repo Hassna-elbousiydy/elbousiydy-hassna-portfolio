@@ -74,16 +74,16 @@
 </section>
 <section class="case-section" id="cycle-vie">
 <h2 class="serif">Maintenir un snapshot cohérent</h2>
-<p>Le rafraîchissement retire les événements expirés en conservant les vecteurs des contenus retenus. La cohérence entre sources, métadonnées et index est contrôlée, notamment par empreintes SHA-256. Cette opération de maintenance évite de recalculer les embeddings conservés ; elle ne remplace pas un flux d’ingestion de nouveaux événements.</p>
+<p>Le rafraîchissement retire les événements sortis de la fenêtre historique retenue en conservant les vecteurs des contenus retenus. La cohérence entre sources, métadonnées et index est contrôlée, notamment par empreintes SHA-256. Cette opération de maintenance évite de recalculer les embeddings conservés ; elle ne remplace pas un flux d’ingestion de nouveaux événements.</p>
 </section>
 <section class="case-section" id="limites">
 <h2 class="serif">Limites et suite logique</h2>
 <div class="case-note"><strong>Ce qui n'est pas revendiqué :</strong> pas de déploiement public, pas de mémoire conversationnelle, pas de monitoring de production et pas de garantie de haute disponibilité.</div>
-<p>Les points à traiter pour passer du POC à un MVP sont notamment la mémoire conversationnelle, le contexte géographique, la recherche web en temps réel, l'observabilité, la montée en charge et le chiffrage du cloud. Ils appartiennent à une <strong>nouvelle mission de conception</strong>, et non aux résultats déjà obtenus sur ce POC.</p>
+<p>Les points à traiter pour passer du POC à un MVP sont notamment la mémoire conversationnelle, le contexte géographique, la recherche web en temps réel, l'observabilité, la montée en charge et le chiffrage du cloud. Ils sont traités dans l’étude de conception du projet 13 ci-dessous. Leur mise en œuvre et leur validation restent à réaliser.</p>
 </section>
 <section class="case-section" id="mvp">
-<h2 class="serif">En cours : concevoir le MVP</h2>
-<p><strong>Projet 13 · Conception en cours.</strong> Le travail engagé porte sur les besoins fonctionnels et non fonctionnels, les parties prenantes, les critères d’acceptation et les risques. Le backlog détaillé, le budget et le déploiement ne sont pas présentés comme achevés.</p>
+<h2 class="serif">Préparer le passage du POC au MVP</h2>
+<p><strong>Projet 13 · Étude de conception documentée.</strong> Pour préparer un service scalable à partir du POC évalué, j’ai analysé les besoins, conçu une architecture cloud et structuré le backlog, le planning, les estimations de coûts et les risques. Ce travail démontre mes compétences en conception d’infrastructure, analyse des compromis et pilotage de projet. Les hypothèses restent à valider ; l’implémentation et le déploiement du MVP restent à réaliser.</p>
 </section>
 <section class="case-section" id="preuves">
 <h2 class="serif">Sources et preuves consultables</h2>
@@ -103,7 +103,7 @@
 </div>
 </article>
 <aside class="case-sidebar">
-<h3>Dans cette étude de cas</h3><a href="#probleme">Problème</a><a href="#approche">Architecture</a><a href="#resultats">Résultats</a><a href="#arbitrages">Arbitrages</a><a href="#cycle-vie">Cycle de vie</a><a href="#limites">Limites</a><a href="#mvp">MVP en cours</a><a href="#preuves">Preuves</a><a href="../index.html#projets" style="border-top:1px solid #d7e5da;margin-top:12px;padding-top:15px">← Retour aux projets</a>
+<h3>Dans cette étude de cas</h3><a href="#probleme">Problème</a><a href="#approche">Architecture</a><a href="#resultats">Résultats</a><a href="#arbitrages">Arbitrages</a><a href="#cycle-vie">Cycle de vie</a><a href="#limites">Limites</a><a href="#mvp">Conception du MVP</a><a href="#preuves">Preuves</a><a href="../index.html#projets" style="border-top:1px solid #d7e5da;margin-top:12px;padding-top:15px">← Retour aux projets</a>
 </aside>
 </div>
 <div class="case-back"><a class="text-link" href="../index.html#projets">← Explorer les autres projets</a>
